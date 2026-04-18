@@ -22,6 +22,9 @@ import {
   calculateAtsScore, completionPercent, improveBullet, isValidUrl,
 } from "@/lib/resume";
 import { exportResumePdf } from "@/lib/pdf-export";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "./auth-provider";
+import { saveResume, loadResume } from "@/lib/resume-store";
 
 const STEPS = [
   { id: 1, label: "Basics", icon: User },
@@ -62,22 +65,62 @@ export function Builder() {
   const previewWrapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Hydrate from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<ResumeData>;
-        setData((d) => ({ ...d, ...parsed, sectionOrder: parsed.sectionOrder ?? d.sectionOrder }));
-      }
-    } catch { /* ignore */ }
-    setHydrated(true);
-  }, []);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [cloudStatus, setCloudStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Redirect unauthenticated users to /login
+  useEffect(() => {
+    if (!authLoading && !user) navigate({ to: "/login" });
+  }, [authLoading, user, navigate]);
+
+  // Hydrate: prefer Firestore, fall back to localStorage
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cloud = await loadResume(user.uid);
+        if (cancelled) return;
+        if (cloud) {
+          setData((d) => ({ ...d, ...cloud, sectionOrder: cloud.sectionOrder ?? d.sectionOrder }));
+        } else {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw) as Partial<ResumeData>;
+            setData((d) => ({ ...d, ...parsed, sectionOrder: parsed.sectionOrder ?? d.sectionOrder }));
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load resume:", e);
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Auto-save to localStorage + Firestore (debounced)
   useEffect(() => {
     if (!hydrated) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
-  }, [data, hydrated]);
+    if (!user) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setCloudStatus("saving");
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await saveResume(user.uid, data);
+        setCloudStatus("saved");
+      } catch (e) {
+        console.warn("Cloud save failed:", e);
+        setCloudStatus("error");
+      }
+    }, 1200);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [data, hydrated, user]);
 
   const { score, suggestions, warnings } = calculateAtsScore(data);
   const completion = completionPercent(data);
