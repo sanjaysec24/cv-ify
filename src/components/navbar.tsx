@@ -28,6 +28,9 @@ export function Navbar() {
             <Link to="/builder" className="hover:text-neon transition-colors" activeProps={{ className: "text-neon" }}>
               Builder
             </Link>
+            <Link to="/ats-checker" className="hover:text-neon transition-colors" activeProps={{ className: "text-neon" }}>
+              ATS Checker
+            </Link>
             <a href="#features" className="hover:text-neon transition-colors">
               Features
             </a>
