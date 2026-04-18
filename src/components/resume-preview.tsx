@@ -1,7 +1,8 @@
 import { forwardRef } from "react";
-import type { ResumeData, SectionId, TemplateId } from "@/lib/resume";
+import { type ResumeData, type SectionId, type TemplateId, shortUrl, ensureProtocol } from "@/lib/resume";
 import {
   Mail, Phone, MapPin, User2, Wrench, FolderGit2, Briefcase, GraduationCap,
+  Linkedin, Github, Globe, ExternalLink,
 } from "lucide-react";
 
 type Props = { data: ResumeData };
