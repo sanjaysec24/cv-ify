@@ -681,15 +681,6 @@ function ResumesTab({
   loading,
   resumes,
   deleteId,
-  downloadingId,
-  onEdit,
-  onDelete,
-  onDownload,
-}: {
-function ResumesTab({
-  loading,
-  resumes,
-  deleteId,
   onEdit,
   onDelete,
 }: {
