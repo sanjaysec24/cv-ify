@@ -11,6 +11,52 @@ export async function exportResumePdf(name: string) {
   const node = document.querySelector<HTMLElement>("[data-resume-root]");
   if (!node) throw new Error("Resume preview not found");
 
+  // html2canvas can't parse modern CSS color functions like oklch()/oklab()/color().
+  // Walk the cloned DOM and replace any computed color/background/border-color that
+  // uses an unsupported function with its rgb() equivalent (resolved by the browser).
+  const sanitizeColors = (clonedDoc: Document) => {
+    const UNSUPPORTED = /(oklch|oklab|color\(|color-mix|lch|lab|hwb)\(/i;
+    const PROPS = [
+      "color",
+      "backgroundColor",
+      "borderTopColor",
+      "borderRightColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "outlineColor",
+      "fill",
+      "stroke",
+    ] as const;
+    const toRgb = (value: string): string | null => {
+      // Use the browser to resolve the color by assigning it to a detached element
+      const probe = clonedDoc.createElement("span");
+      probe.style.color = value;
+      clonedDoc.body.appendChild(probe);
+      const resolved = clonedDoc.defaultView?.getComputedStyle(probe).color || "";
+      probe.remove();
+      return resolved && !UNSUPPORTED.test(resolved) ? resolved : null;
+    };
+    const all = clonedDoc.querySelectorAll<HTMLElement>("*");
+    all.forEach((el) => {
+      const cs = clonedDoc.defaultView?.getComputedStyle(el);
+      if (!cs) return;
+      for (const prop of PROPS) {
+        const val = cs[prop as keyof CSSStyleDeclaration] as string | undefined;
+        if (val && UNSUPPORTED.test(val)) {
+          const rgb = toRgb(val);
+          if (rgb) (el.style as unknown as Record<string, string>)[prop] = rgb;
+          else (el.style as unknown as Record<string, string>)[prop] =
+            prop === "color" ? "#111111" : "transparent";
+        }
+      }
+      // Also strip background-image gradients that use oklch
+      const bgImage = cs.backgroundImage;
+      if (bgImage && UNSUPPORTED.test(bgImage)) {
+        el.style.backgroundImage = "none";
+      }
+    });
+  };
+
   // High-DPI render for crisp text
   const canvas = await html2canvas(node, {
     scale: 2,
@@ -19,6 +65,7 @@ export async function exportResumePdf(name: string) {
     logging: false,
     windowWidth: node.scrollWidth,
     windowHeight: node.scrollHeight,
+    onclone: (clonedDoc) => sanitizeColors(clonedDoc),
   });
 
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
