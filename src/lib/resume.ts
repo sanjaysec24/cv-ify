@@ -1,3 +1,5 @@
+export type SectionId = "summary" | "skills" | "projects" | "experience" | "education";
+
 export type ResumeData = {
   name: string;
   email: string;
@@ -9,6 +11,18 @@ export type ResumeData = {
   projects: { title: string; description: string }[];
   experience: { company: string; role: string; duration: string; description: string }[];
   education: { school: string; degree: string; year: string }[];
+  template: "modern" | "sidebar" | "creative";
+  sectionOrder: SectionId[];
+};
+
+export const DEFAULT_SECTION_ORDER: SectionId[] = ["summary", "skills", "projects", "experience", "education"];
+
+export const SECTION_LABELS: Record<SectionId, string> = {
+  summary: "Summary",
+  skills: "Skills",
+  projects: "Projects",
+  experience: "Experience",
+  education: "Education",
 };
 
 export const ROLE_SKILLS: Record<string, string[]> = {
@@ -35,9 +49,10 @@ export function improveBullet(text: string): string {
   return `${verb} ${cleaned}, ${metric}.`;
 }
 
-export function calculateAtsScore(data: ResumeData): { score: number; suggestions: string[] } {
+export function calculateAtsScore(data: ResumeData): { score: number; suggestions: string[]; warnings: string[] } {
   let score = 0;
   const suggestions: string[] = [];
+  const warnings: string[] = [];
 
   if (data.name) score += 5; else suggestions.push("Add your full name");
   if (data.email) score += 5; else suggestions.push("Add a contact email");
@@ -48,18 +63,62 @@ export function calculateAtsScore(data: ResumeData): { score: number; suggestion
 
   if (data.skills.length >= 6) score += 20;
   else if (data.skills.length >= 3) { score += 10; suggestions.push("Add more relevant skills (aim for 6+)"); }
-  else suggestions.push("Add at least 6 skills");
+  else { suggestions.push("Add at least 6 skills"); warnings.push("Less than 3 skills"); }
 
   if (data.projects.length >= 2) score += 25;
   else if (data.projects.length === 1) { score += 12; suggestions.push("Add another project to strengthen your resume"); }
-  else suggestions.push("Include at least 1 project");
+  else { suggestions.push("Include at least 1 project"); warnings.push("No projects added"); }
 
-  const projDescOk = data.projects.every(p => p.description.length > 50);
-  if (data.projects.length > 0 && projDescOk) score += 10;
-  else if (data.projects.length > 0) suggestions.push("Expand short project descriptions");
+  const shortDescs = data.projects.filter(p => p.description.length > 0 && p.description.length <= 50).length;
+  if (data.projects.length > 0 && shortDescs === 0) score += 10;
+  else if (shortDescs > 0) warnings.push(`${shortDescs} project description${shortDescs > 1 ? "s" : ""} too short`);
 
   if (data.experience.length > 0) score += 10;
   if (data.education.length > 0) score += 5;
+  else warnings.push("No education added");
 
-  return { score: Math.min(100, score), suggestions: suggestions.slice(0, 5) };
+  // Keyword match bonus
+  if (data.role && ROLE_SKILLS[data.role]) {
+    const target = ROLE_SKILLS[data.role].map(s => s.toLowerCase());
+    const matched = data.skills.filter(s => target.includes(s.toLowerCase())).length;
+    if (matched >= 4) score += 5;
+    else if (matched > 0) suggestions.push(`Add more ${data.role}-specific keywords`);
+  }
+
+  return { score: Math.min(100, score), suggestions: suggestions.slice(0, 5), warnings };
 }
+
+export function completionPercent(data: ResumeData): number {
+  const checks = [
+    !!data.name, !!data.email, !!data.role, !!data.summary,
+    data.skills.length >= 3, data.projects.length >= 1,
+    data.experience.length >= 0 ? data.experience.length > 0 || data.projects.length >= 2 : false,
+    data.education.length >= 1,
+  ];
+  const passed = checks.filter(Boolean).length;
+  return Math.round((passed / checks.length) * 100);
+}
+
+export const DEMO_DATA: ResumeData = {
+  name: "Aanya Sharma",
+  email: "aanya.sharma@email.com",
+  phone: "+91 98765 43210",
+  location: "Bengaluru, India",
+  role: "Frontend Developer",
+  summary: "Final-year CS student passionate about building delightful, accessible web experiences. Strong fundamentals in React, TypeScript and modern UI engineering.",
+  skills: ["React", "TypeScript", "Tailwind CSS", "Next.js", "Vite", "Figma", "Jest", "GraphQL"],
+  projects: [
+    { title: "Pulse — Realtime Dashboard", description: "Engineered a real-time analytics dashboard with React and WebSockets, reducing perceived load time by 40% and supporting 10k concurrent users." },
+    { title: "StudyHive — Collab Notes", description: "Designed a collaborative notes platform with offline sync and rich-text editing, growing to 2,000 weekly active student users." },
+  ],
+  experience: [
+    { company: "Lumen Labs", role: "Frontend Intern", duration: "Jun 2024 – Aug 2024", description: "Shipped 12+ UI components used across 3 products, improving design-system coverage by 60%." },
+  ],
+  education: [
+    { school: "BITS Pilani", degree: "B.E. Computer Science", year: "2022 – 2026" },
+  ],
+  template: "modern",
+  sectionOrder: DEFAULT_SECTION_ORDER,
+};
+
+export const STORAGE_KEY = "cvify.resume.v2";

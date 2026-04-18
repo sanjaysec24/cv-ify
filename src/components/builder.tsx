@@ -1,15 +1,25 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   User, Wrench, FolderGit2, Briefcase, GraduationCap,
   Sparkles, Plus, X, Download, Check, AlertTriangle, Loader2, ArrowRight, ArrowLeft,
+  GripVertical, Wand2, LayoutTemplate,
 } from "lucide-react";
 import { ResumePreview } from "./resume-preview";
 import {
-  type ResumeData, ROLES, ROLE_SKILLS, calculateAtsScore, improveBullet,
+  type ResumeData, type SectionId, ROLES, ROLE_SKILLS, SECTION_LABELS,
+  DEFAULT_SECTION_ORDER, DEMO_DATA, STORAGE_KEY,
+  calculateAtsScore, completionPercent, improveBullet,
 } from "@/lib/resume";
+import { exportResumePdf } from "@/lib/pdf-export";
 
 const STEPS = [
   { id: 1, label: "Basics", icon: User },
@@ -22,18 +32,45 @@ const STEPS = [
 const initial: ResumeData = {
   name: "", email: "", phone: "", location: "", role: "", summary: "",
   skills: [], projects: [], experience: [], education: [],
+  template: "modern", sectionOrder: DEFAULT_SECTION_ORDER,
 };
+
+const TEMPLATES: { id: ResumeData["template"]; label: string; desc: string }[] = [
+  { id: "modern", label: "Modern", desc: "Clean & minimal" },
+  { id: "sidebar", label: "Sidebar", desc: "Pro left rail" },
+  { id: "creative", label: "Creative", desc: "Card style" },
+];
 
 export function Builder() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<ResumeData>(initial);
+  const [hydrated, setHydrated] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [improvingIdx, setImprovingIdx] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewWrapRef = useRef<HTMLDivElement>(null);
 
-  const { score, suggestions } = calculateAtsScore(data);
+  // Hydrate from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<ResumeData>;
+        setData((d) => ({ ...d, ...parsed, sectionOrder: parsed.sectionOrder ?? d.sectionOrder }));
+      }
+    } catch { /* ignore */ }
+    setHydrated(true);
+  }, []);
+
+  // Persist
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+  }, [data, hydrated]);
+
+  const { score, suggestions, warnings } = calculateAtsScore(data);
+  const completion = completionPercent(data);
   const suggestedSkills = data.role ? ROLE_SKILLS[data.role] ?? [] : [];
 
   const update = <K extends keyof ResumeData>(key: K, value: ResumeData[K]) =>
@@ -48,7 +85,7 @@ export function Builder() {
 
   const improveProject = async (i: number) => {
     setImprovingIdx(i);
-    await new Promise((r) => setTimeout(r, 900));
+    await new Promise((r) => setTimeout(r, 700));
     setData((d) => {
       const projects = [...d.projects];
       projects[i] = { ...projects[i], description: improveBullet(projects[i].description) };
@@ -58,16 +95,10 @@ export function Builder() {
   };
 
   const downloadPdf = async () => {
-    if (!previewRef.current) return;
     setDownloading(true);
     try {
-      const canvas = await html2canvas(previewRef.current, { scale: 2, backgroundColor: "#ffffff" });
-      const img = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const w = pdf.internal.pageSize.getWidth();
-      const h = (canvas.height * w) / canvas.width;
-      pdf.addImage(img, "PNG", 0, 0, w, h);
-      pdf.save(`${data.name || "resume"}.pdf`);
+      await new Promise((r) => setTimeout(r, 200));
+      exportResumePdf(data);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2200);
     } finally {
@@ -75,9 +106,21 @@ export function Builder() {
     }
   };
 
+  const loadDemo = () => setData({ ...DEMO_DATA, template: data.template, sectionOrder: data.sectionOrder });
+  const resetAll = () => { if (confirm("Clear all resume data?")) setData(initial); };
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = data.sectionOrder.indexOf(active.id as SectionId);
+    const newIdx = data.sectionOrder.indexOf(over.id as SectionId);
+    update("sectionOrder", arrayMove(data.sectionOrder, oldIdx, newIdx));
+  };
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8 lg:px-8">
-      {/* Top: Progress + ATS */}
+      {/* Top toolbar */}
       <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_auto]">
         <div className="glass rounded-2xl p-4">
           <div className="flex items-center justify-between">
@@ -108,7 +151,34 @@ export function Builder() {
             })}
           </div>
         </div>
-        <AtsCard score={score} />
+        <AtsCard score={score} completion={completion} />
+      </div>
+
+      {/* Quick actions */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button onClick={loadDemo} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
+          <Wand2 className="h-3.5 w-3.5" /> Try Demo Resume
+        </button>
+        <button onClick={resetAll} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
+          <X className="h-3.5 w-3.5" /> Reset
+        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground"><LayoutTemplate className="h-3.5 w-3.5" /> Template</span>
+          <div className="flex rounded-full border border-border bg-background p-1">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => update("template", t.id)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                  data.template === t.id ? "bg-neon text-neon-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={t.desc}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -316,7 +386,7 @@ export function Builder() {
             {step < STEPS.length ? (
               <button
                 onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}
-                className="inline-flex items-center gap-1.5 rounded-full bg-neon px-5 py-2 text-sm font-semibold text-neon-foreground hover:opacity-90"
+                className="inline-flex items-center gap-1.5 rounded-full bg-neon px-5 py-2 text-sm font-semibold text-neon-foreground hover:opacity-90 hover:shadow-glow transition-all"
               >
                 Next <ArrowRight className="h-4 w-4" />
               </button>
@@ -332,10 +402,38 @@ export function Builder() {
             )}
           </div>
 
+          {/* Section reordering */}
+          <div className="mt-6 rounded-2xl border border-border bg-background/40 p-4">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <GripVertical className="h-3.5 w-3.5 text-neon" /> Reorder Sections
+            </p>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={data.sectionOrder} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1.5">
+                  {data.sectionOrder.map((id) => (
+                    <SortableRow key={id} id={id} label={SECTION_LABELS[id]} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
+
+          {/* Weak resume detector */}
+          {warnings.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-destructive">
+                <AlertTriangle className="h-3.5 w-3.5" /> Weak Resume Detector
+              </p>
+              <ul className="space-y-1 text-sm text-foreground/80">
+                {warnings.map((w) => <li key={w}>⚠ {w}</li>)}
+              </ul>
+            </div>
+          )}
+
           {suggestions.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-border bg-background/40 p-4">
+            <div className="mt-4 rounded-2xl border border-border bg-background/40 p-4">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <AlertTriangle className="h-3.5 w-3.5 text-neon" /> Resume Health
+                <Sparkles className="h-3.5 w-3.5 text-neon" /> Suggestions to Improve Score
               </p>
               <ul className="space-y-1 text-sm text-muted-foreground">
                 {suggestions.map((s) => <li key={s}>• {s}</li>)}
@@ -346,15 +444,21 @@ export function Builder() {
 
         {/* RIGHT: preview */}
         <div className="lg:sticky lg:top-24 lg:h-fit">
-          <div className="rounded-3xl bg-muted/40 p-4 lg:p-6 overflow-auto">
-            <div className="origin-top scale-[0.78] sm:scale-90 lg:scale-[0.72] xl:scale-90 -mb-[20%]">
-              <ResumePreview ref={previewRef} data={data} />
-            </div>
+          <div ref={previewWrapRef} className="rounded-3xl bg-muted/40 p-4 lg:p-6 overflow-auto">
+            <motion.div
+              key={data.template}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="origin-top scale-[0.78] sm:scale-90 lg:scale-[0.72] xl:scale-90 -mb-[20%]"
+            >
+              <ResumePreview data={data} />
+            </motion.div>
           </div>
           <button
             onClick={downloadPdf}
             disabled={downloading}
-            className="mt-4 hidden lg:inline-flex w-full items-center justify-center gap-2 rounded-full bg-neon px-5 py-3 text-sm font-bold text-neon-foreground hover:opacity-90 disabled:opacity-50 transition-all"
+            className="mt-4 hidden lg:inline-flex w-full items-center justify-center gap-2 rounded-full bg-neon px-5 py-3 text-sm font-bold text-neon-foreground hover:opacity-90 hover:shadow-glow disabled:opacity-50 transition-all"
           >
             {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Download as PDF
@@ -378,6 +482,27 @@ export function Builder() {
   );
 }
 
+function SortableRow({ id, label }: { id: SectionId; label: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex cursor-grab items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:border-neon active:cursor-grabbing"
+    >
+      <GripVertical className="h-4 w-4 text-muted-foreground" />
+      {label}
+    </div>
+  );
+}
+
 function StepWrap({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
     <div>
@@ -396,22 +521,22 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-neon focus:outline-none focus:ring-2 focus:ring-neon/30"
+        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-neon focus:outline-none focus:ring-2 focus:ring-neon/30 transition-colors"
       />
     </div>
   );
 }
 
-function AtsCard({ score }: { score: number }) {
+function AtsCard({ score, completion }: { score: number; completion: number }) {
   const color = score >= 75 ? "text-neon" : score >= 45 ? "text-amber-500" : "text-destructive";
   return (
-    <div className="glass rounded-2xl p-4 lg:min-w-[260px]">
+    <div className="glass rounded-2xl p-4 lg:min-w-[280px]">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">ATS Score</p>
           <p className={`mt-0.5 font-display text-3xl font-bold ${color}`}>{score}<span className="text-base text-muted-foreground">/100</span></p>
         </div>
-        <Sparkles className="h-6 w-6 text-neon" />
+        <Sparkles className="h-6 w-6 text-neon animate-pulse-glow rounded-full" />
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
         <motion.div
@@ -419,6 +544,18 @@ function AtsCard({ score }: { score: number }) {
           animate={{ width: `${score}%` }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="h-full rounded-full bg-neon"
+        />
+      </div>
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>Resume Strength</span>
+        <span className="font-semibold text-foreground">{completion}%</span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${completion}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="h-full rounded-full bg-foreground"
         />
       </div>
     </div>
