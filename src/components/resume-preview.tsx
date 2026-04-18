@@ -249,8 +249,8 @@ function SidebarTemplate({ data }: Props) {
   const mainIds = data.sectionOrder.filter((id) => !sidebarIds.includes(id));
   const c = data.primaryColor;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "34% 1fr", height: "100%" }}>
-      <aside style={{ background: c, color: "#ffffff", padding: "32px 22px" }}>
+    <div style={{ display: "flex", height: "100%", width: "100%" }}>
+      <aside style={{ width: 250, minWidth: 250, maxWidth: 250, flexShrink: 0, background: c, color: "#ffffff", padding: "32px 22px", boxSizing: "border-box", overflow: "hidden" }}>
         {data.photo && (
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
             <Photo src={data.photo} size={96} ring="#ffffff" />
