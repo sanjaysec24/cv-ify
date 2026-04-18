@@ -774,18 +774,6 @@ function ResumesTab({
                 <Eye className="h-3.5 w-3.5" /> View
               </button>
               <button
-                onClick={() => onDownload(r)}
-                disabled={downloadingId === r.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold transition hover:bg-accent disabled:opacity-60"
-              >
-                {downloadingId === r.id ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Download className="h-3.5 w-3.5" />
-                )}
-                PDF
-              </button>
-              <button
                 onClick={() => onDelete(r.id)}
                 disabled={deleteId === r.id}
                 className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-destructive/40 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
