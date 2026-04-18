@@ -11,6 +11,22 @@ export async function exportResumePdf(name: string) {
   const node = document.querySelector<HTMLElement>("[data-resume-root]");
   if (!node) throw new Error("Resume preview not found");
 
+  // Temporarily remove any zoom/scale transform on ancestors so html2canvas
+  // captures the resume at its true 794x1123 size without distortion.
+  const transformedAncestors: { el: HTMLElement; transform: string; marginBottom: string }[] = [];
+  let pAnc: HTMLElement | null = node.parentElement;
+  while (pAnc && pAnc !== document.body) {
+    const t = pAnc.style.transform;
+    if (t && t.includes("scale")) {
+      transformedAncestors.push({ el: pAnc, transform: t, marginBottom: pAnc.style.marginBottom });
+      pAnc.style.transform = "none";
+      pAnc.style.marginBottom = "0px";
+    }
+    pAnc = pAnc.parentElement;
+  }
+  // Allow layout to settle
+  await new Promise((r) => requestAnimationFrame(() => r(null)));
+
   // html2canvas can't parse modern CSS color functions like oklch()/oklab()/color().
   // Walk the cloned DOM and replace any computed color/background/border-color that
   // uses an unsupported function with its rgb() equivalent (resolved by the browser).
