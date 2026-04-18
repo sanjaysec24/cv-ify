@@ -5,7 +5,7 @@ import { Sparkles, Gauge, Download, ArrowRight, Wand2, FileCheck2, Zap } from "l
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Resume.AI — Build ATS-Friendly Resumes in Minutes" },
+      { title: "CVify.AI — Build ATS-Friendly Resumes in Minutes" },
       { name: "description", content: "Smart AI-powered resume builder for students. Real-time ATS scoring, role-based skill suggestions, instant PDF export." },
     ],
   }),
@@ -157,7 +157,7 @@ function Home() {
       </section>
 
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Resume.AI — Built with ✨ for students.
+        © {new Date().getFullYear()} CVify.AI — Built with ✨ for students.
       </footer>
     </main>
   );

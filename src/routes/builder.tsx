@@ -4,7 +4,7 @@ import { Builder } from "@/components/builder";
 export const Route = createFileRoute("/builder")({
   head: () => ({
     meta: [
-      { title: "Resume Builder — Resume.AI" },
+      { title: "Resume Builder — CVify.AI" },
       { name: "description", content: "Step-by-step AI resume builder with live preview, ATS scoring, and PDF download." },
     ],
   }),

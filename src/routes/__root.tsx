@@ -20,7 +20,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Resume.AI — Build ATS-Friendly Resumes in Minutes" },
+      { title: "CVify.AI — Build ATS-Friendly Resumes in Minutes" },
       { name: "description", content: "Smart AI-powered resume builder for students and freshers. Get ATS scores, AI suggestions, and instant PDF download." },
     ],
     links: [
