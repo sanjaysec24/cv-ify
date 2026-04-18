@@ -293,7 +293,7 @@ function SidebarTemplate({ data }: Props) {
           </div>
         )}
       </aside>
-      <main style={{ padding: "32px 28px", color: "#111827" }}>
+      <main style={{ width: 544, minWidth: 544, maxWidth: 544, flexShrink: 0, padding: "32px 28px", color: "#111827", boxSizing: "border-box", overflow: "hidden" }}>
         {mainIds.map((id) => {
           const body = renderBody(id, data);
           if (!body) return null;
