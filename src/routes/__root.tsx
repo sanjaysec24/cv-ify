@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-r
 import appCss from "../styles.css?url";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { AuthProvider } from "@/components/auth-provider";
 
 function NotFoundComponent() {
@@ -54,9 +55,12 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
           <Navbar />
-          <Outlet />
+          <div className="flex-1">
+            <Outlet />
+          </div>
+          <Footer />
         </div>
       </AuthProvider>
     </ThemeProvider>

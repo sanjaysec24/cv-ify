@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Linkedin, Github } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 
 export const Route = createFileRoute("/login")({
@@ -21,7 +21,7 @@ function LoginPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/builder" });
+    if (!loading && user) navigate({ to: "/profile" });
   }, [user, loading, navigate]);
 
   async function handleGoogle() {
@@ -29,7 +29,7 @@ function LoginPage() {
     setBusy(true);
     try {
       await signInWithGoogle();
-      navigate({ to: "/builder" });
+      navigate({ to: "/profile" });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Sign-in failed";
       setErr(msg);
@@ -80,6 +80,28 @@ function LoginPage() {
             {err}
           </p>
         )}
+
+        {/* Social icons */}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <a
+            href="https://www.linkedin.com/in/sanjay-kumar-b-67b7b532a/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background transition-all hover:border-neon hover:text-neon hover:shadow-[0_0_20px_rgba(202,138,4,0.55)]"
+          >
+            <Linkedin className="h-4 w-4" />
+          </a>
+          <a
+            href="https://github.com/sanjaysec24"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background transition-all hover:border-neon hover:text-neon hover:shadow-[0_0_20px_rgba(202,138,4,0.55)]"
+          >
+            <Github className="h-4 w-4" />
+          </a>
+        </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           Just exploring?{" "}
