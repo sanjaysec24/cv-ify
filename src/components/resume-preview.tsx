@@ -22,15 +22,21 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) =
     <div
       ref={ref}
       data-resume-root
-      className="resume-container mx-auto overflow-hidden shadow-2xl"
+      data-template={data.template}
+      className="resume-container pdf-page mx-auto overflow-hidden shadow-2xl"
       style={{
         width: "794px",
         height: "1123px",
+        minWidth: "794px",
+        maxWidth: "794px",
+        minHeight: "1123px",
+        maxHeight: "1123px",
         backgroundColor: "#ffffff",
         color: "#111827",
         fontFamily: "Inter, sans-serif",
         lineHeight: 1.5,
         boxSizing: "border-box",
+        position: "relative",
         breakInside: "avoid",
         pageBreakInside: "avoid",
       }}
