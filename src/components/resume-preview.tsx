@@ -65,12 +65,50 @@ function Photo({ src, size = 84, ring = "#e5e7eb" }: { src?: string; size?: numb
   );
 }
 
-function ContactRow({ data, color = "#4b5563" }: { data: ResumeData; color?: string }) {
+function ContactRow({ data, color = "#4b5563", linkColor }: { data: ResumeData; color?: string; linkColor?: string }) {
+  const lc = linkColor ?? color;
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12, color }}>
-      {data.email && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} />{data.email}</span>}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", fontSize: 12, color, lineHeight: 1.5 }}>
+      {data.email && (
+        <a href={`mailto:${data.email}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, color, textDecoration: "none" }}>
+          <Mail style={{ width: 12, height: 12 }} />{data.email}
+        </a>
+      )}
       {data.phone && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</span>}
       {data.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</span>}
+      {data.linkedin && (
+        <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Linkedin style={{ width: 12, height: 12 }} />{shortUrl(data.linkedin)}
+        </a>
+      )}
+      {data.github && (
+        <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Github style={{ width: 12, height: 12 }} />{shortUrl(data.github)}
+        </a>
+      )}
+      {data.website && (
+        <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Globe style={{ width: 12, height: 12 }} />{shortUrl(data.website)}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function ProjectLinks({ p, color }: { p: { github?: string; demo?: string }; color: string }) {
+  if (!p.github && !p.demo) return null;
+  return (
+    <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: "2px 14px", fontSize: 11.5 }}>
+      {p.github && (
+        <a href={ensureProtocol(p.github)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, color, textDecoration: "none", fontWeight: 500 }}>
+          <Github style={{ width: 11, height: 11 }} /> GitHub: {shortUrl(p.github)}
+        </a>
+      )}
+      {p.demo && (
+        <a href={ensureProtocol(p.demo)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, color, textDecoration: "none", fontWeight: 500 }}>
+          <ExternalLink style={{ width: 11, height: 11 }} /> Live: {shortUrl(p.demo)}
+        </a>
+      )}
     </div>
   );
 }
