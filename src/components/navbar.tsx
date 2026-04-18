@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Moon, Sun, Sparkles, LogOut, FileText, ChevronDown } from "lucide-react";
+import { Moon, Sun, Sparkles, LogOut, FileText, ChevronDown, User as UserIcon } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { useAuth } from "./auth-provider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -107,6 +107,14 @@ export function Navbar() {
                         <p className="truncate text-sm font-semibold">{user.displayName ?? "User"}</p>
                         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                       </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                        role="menuitem"
+                      >
+                        <UserIcon className="h-4 w-4" /> My Profile
+                      </Link>
                       <Link
                         to="/builder"
                         onClick={() => setOpen(false)}
