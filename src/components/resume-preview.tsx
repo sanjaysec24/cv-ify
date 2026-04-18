@@ -22,15 +22,21 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) =
     <div
       ref={ref}
       data-resume-root
-      className="resume-container mx-auto overflow-hidden shadow-2xl"
+      data-template={data.template}
+      className="resume-container pdf-page mx-auto overflow-hidden shadow-2xl"
       style={{
         width: "794px",
         height: "1123px",
+        minWidth: "794px",
+        maxWidth: "794px",
+        minHeight: "1123px",
+        maxHeight: "1123px",
         backgroundColor: "#ffffff",
         color: "#111827",
         fontFamily: "Inter, sans-serif",
         lineHeight: 1.5,
         boxSizing: "border-box",
+        position: "relative",
         breakInside: "avoid",
         pageBreakInside: "avoid",
       }}
@@ -243,8 +249,8 @@ function SidebarTemplate({ data }: Props) {
   const mainIds = data.sectionOrder.filter((id) => !sidebarIds.includes(id));
   const c = data.primaryColor;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "34% 1fr", height: "100%" }}>
-      <aside style={{ background: c, color: "#ffffff", padding: "32px 22px" }}>
+    <div style={{ display: "flex", height: "100%", width: "100%" }}>
+      <aside style={{ width: 250, minWidth: 250, maxWidth: 250, flexShrink: 0, background: c, color: "#ffffff", padding: "32px 22px", boxSizing: "border-box", overflow: "hidden" }}>
         {data.photo && (
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
             <Photo src={data.photo} size={96} ring="#ffffff" />
@@ -287,7 +293,7 @@ function SidebarTemplate({ data }: Props) {
           </div>
         )}
       </aside>
-      <main style={{ padding: "32px 28px", color: "#111827" }}>
+      <main style={{ width: 544, minWidth: 544, maxWidth: 544, flexShrink: 0, padding: "32px 28px", color: "#111827", boxSizing: "border-box", overflow: "hidden" }}>
         {mainIds.map((id) => {
           const body = renderBody(id, data);
           if (!body) return null;
