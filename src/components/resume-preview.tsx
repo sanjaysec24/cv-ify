@@ -342,11 +342,20 @@ function ClassicTemplate({ data }: Props) {
         <p style={{ margin: "6px 0 0", fontSize: 12 }}>
           {[data.email, data.phone, data.location].filter(Boolean).join("  |  ")}
         </p>
+        {(data.linkedin || data.github || data.website) && (
+          <p style={{ margin: "3px 0 0", fontSize: 12 }}>
+            {[
+              data.linkedin && <a key="li" href={ensureProtocol(data.linkedin)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.linkedin)}</a>,
+              data.github && <a key="gh" href={ensureProtocol(data.github)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.github)}</a>,
+              data.website && <a key="w" href={ensureProtocol(data.website)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.website)}</a>,
+            ].filter(Boolean).reduce<React.ReactNode[]>((acc, el, i) => i === 0 ? [el] : [...acc, "  |  ", el], [])}
+          </p>
+        )}
       </header>
       <div style={{ height: 1, background: "#000", margin: "8px 0 14px" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {data.sectionOrder.map((id) => {
-          const body = renderBody(id, data);
+          const body = renderBody(id, data, { color: "#000" });
           if (!body) return null;
           return (
             <section key={id}>
