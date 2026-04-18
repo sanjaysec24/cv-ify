@@ -13,15 +13,34 @@ import {
 import { getDb } from "./firebase";
 import type { ResumeData } from "./resume";
 
+/** Recursively strip undefined values — Firestore rejects them. */
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter((v) => v !== undefined)
+      .map((v) => stripUndefined(v)) as unknown as T;
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v === undefined) continue;
+      out[k] = stripUndefined(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 /** One resume per user (id = uid). Easy to extend to multiple later. */
 export async function saveResume(userId: string, data: ResumeData) {
+  const clean = stripUndefined(data);
   await setDoc(
     doc(getDb(), "resumes", userId),
     {
       userId,
-      resumeData: data,
-      template: data.template,
-      title: data.name?.trim() ? `${data.name}'s Resume` : "Untitled Resume",
+      resumeData: clean,
+      template: clean.template ?? "modern",
+      title: clean.name?.trim() ? `${clean.name}'s Resume` : "Untitled Resume",
       updatedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
     },
