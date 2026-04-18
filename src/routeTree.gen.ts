@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as BuilderRouteImport } from './routes/builder'
+import { Route as AtsCheckerRouteImport } from './routes/ats-checker'
 import { Route as IndexRouteImport } from './routes/index'
 
 const BuilderRoute = BuilderRouteImport.update({
   id: '/builder',
   path: '/builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtsCheckerRoute = AtsCheckerRouteImport.update({
+  id: '/ats-checker',
+  path: '/ats-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ats-checker': typeof AtsCheckerRoute
   '/builder': typeof BuilderRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ats-checker': typeof AtsCheckerRoute
   '/builder': typeof BuilderRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ats-checker': typeof AtsCheckerRoute
   '/builder': typeof BuilderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/builder'
+  fullPaths: '/' | '/ats-checker' | '/builder'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/builder'
-  id: '__root__' | '/' | '/builder'
+  to: '/' | '/ats-checker' | '/builder'
+  id: '__root__' | '/' | '/ats-checker' | '/builder'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AtsCheckerRoute: typeof AtsCheckerRoute
   BuilderRoute: typeof BuilderRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/builder'
       fullPath: '/builder'
       preLoaderRoute: typeof BuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ats-checker': {
+      id: '/ats-checker'
+      path: '/ats-checker'
+      fullPath: '/ats-checker'
+      preLoaderRoute: typeof AtsCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,8 +87,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AtsCheckerRoute: AtsCheckerRoute,
   BuilderRoute: BuilderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
