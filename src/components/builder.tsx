@@ -252,8 +252,6 @@ export function Builder() {
             {cloudStatus === "saving" ? "Saving…" : cloudStatus === "saved" ? "Saved to cloud" : cloudStatus === "error" ? "Save failed" : "Cloud sync"}
           </span>
         )}
-        <button className="hidden">_</button>
-        </button>
         <button onClick={resetAll} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <X className="h-3.5 w-3.5" /> Reset
         </button>
