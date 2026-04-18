@@ -161,17 +161,6 @@ function ProfilePage() {
     navigate({ to: "/builder" });
   }
 
-  async function handleDownload(item: ResumeListItem) {
-    setDownloadingId(item.id);
-    try {
-      await exportResumePdf(item.resumeData);
-    } catch (e) {
-      console.warn("download failed", e);
-      showToast("err", "Could not download PDF");
-    } finally {
-      setDownloadingId(null);
-    }
-  }
 
   async function handleNewResume() {
     if (!user) return;
@@ -697,13 +686,18 @@ function ResumesTab({
   onDelete,
   onDownload,
 }: {
+function ResumesTab({
+  loading,
+  resumes,
+  deleteId,
+  onEdit,
+  onDelete,
+}: {
   loading: boolean;
   resumes: ResumeListItem[] | null;
   deleteId: string | null;
-  downloadingId: string | null;
   onEdit: (r: ResumeListItem) => void;
   onDelete: (id: string) => void;
-  onDownload: (r: ResumeListItem) => void;
 }) {
   if (loading) {
     return (
