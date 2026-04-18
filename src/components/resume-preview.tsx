@@ -1,7 +1,8 @@
 import { forwardRef } from "react";
-import type { ResumeData, SectionId, TemplateId } from "@/lib/resume";
+import { type ResumeData, type SectionId, type TemplateId, shortUrl, ensureProtocol } from "@/lib/resume";
 import {
   Mail, Phone, MapPin, User2, Wrench, FolderGit2, Briefcase, GraduationCap,
+  Linkedin, Github, Globe, ExternalLink,
 } from "lucide-react";
 
 type Props = { data: ResumeData };
@@ -64,12 +65,50 @@ function Photo({ src, size = 84, ring = "#e5e7eb" }: { src?: string; size?: numb
   );
 }
 
-function ContactRow({ data, color = "#4b5563" }: { data: ResumeData; color?: string }) {
+function ContactRow({ data, color = "#4b5563", linkColor }: { data: ResumeData; color?: string; linkColor?: string }) {
+  const lc = linkColor ?? color;
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12, color }}>
-      {data.email && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} />{data.email}</span>}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", fontSize: 12, color, lineHeight: 1.5 }}>
+      {data.email && (
+        <a href={`mailto:${data.email}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, color, textDecoration: "none" }}>
+          <Mail style={{ width: 12, height: 12 }} />{data.email}
+        </a>
+      )}
       {data.phone && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</span>}
       {data.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</span>}
+      {data.linkedin && (
+        <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Linkedin style={{ width: 12, height: 12 }} />{shortUrl(data.linkedin)}
+        </a>
+      )}
+      {data.github && (
+        <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Github style={{ width: 12, height: 12 }} />{shortUrl(data.github)}
+        </a>
+      )}
+      {data.website && (
+        <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: lc, textDecoration: "none" }}>
+          <Globe style={{ width: 12, height: 12 }} />{shortUrl(data.website)}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function ProjectLinks({ p, color }: { p: { github?: string; demo?: string }; color: string }) {
+  if (!p.github && !p.demo) return null;
+  return (
+    <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: "2px 14px", fontSize: 11.5 }}>
+      {p.github && (
+        <a href={ensureProtocol(p.github)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, color, textDecoration: "none", fontWeight: 500 }}>
+          <Github style={{ width: 11, height: 11 }} /> GitHub: {shortUrl(p.github)}
+        </a>
+      )}
+      {p.demo && (
+        <a href={ensureProtocol(p.demo)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, color, textDecoration: "none", fontWeight: 500 }}>
+          <ExternalLink style={{ width: 11, height: 11 }} /> Live: {shortUrl(p.demo)}
+        </a>
+      )}
     </div>
   );
 }
@@ -115,11 +154,13 @@ function renderBody(id: SectionId, data: ResumeData, opts: { compact?: boolean; 
       ) : null;
     case "projects":
       return data.projects.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {data.projects.map((p, i) => (
             <div key={i}>
               <h3 style={{ fontSize: fs + 1, fontWeight: 600, margin: 0, color: "#111827" }}>{p.title || "Untitled Project"}</h3>
               {p.description && <p style={{ fontSize: fs, lineHeight: 1.55, color: "#374151", margin: "3px 0 0" }}>{p.description}</p>}
+              {p.tech && <p style={{ fontSize: sub, color: "#4b5563", margin: "3px 0 0" }}><span style={{ fontWeight: 600 }}>Tech:</span> {p.tech}</p>}
+              <ProjectLinks p={p} color={opts.color ?? data.primaryColor ?? "#111827"} />
             </div>
           ))}
         </div>
@@ -209,9 +250,12 @@ function SidebarTemplate({ data }: Props) {
         </h1>
         {data.role && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.85)" }}>{data.role}</p>}
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, fontSize: 11.5, color: "rgba(255,255,255,0.92)" }}>
-          {data.email && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></div>}
+          {data.email && <a href={`mailto:${data.email}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none" }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></a>}
           {data.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</div>}
           {data.location && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</div>}
+          {data.linkedin && <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Linkedin style={{ width: 12, height: 12 }} />{shortUrl(data.linkedin)}</a>}
+          {data.github && <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Github style={{ width: 12, height: 12 }} />{shortUrl(data.github)}</a>}
+          {data.website && <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Globe style={{ width: 12, height: 12 }} />{shortUrl(data.website)}</a>}
         </div>
         {data.skills.length > 0 && (
           <div style={{ marginTop: 22 }}>
@@ -301,11 +345,20 @@ function ClassicTemplate({ data }: Props) {
         <p style={{ margin: "6px 0 0", fontSize: 12 }}>
           {[data.email, data.phone, data.location].filter(Boolean).join("  |  ")}
         </p>
+        {(data.linkedin || data.github || data.website) && (
+          <p style={{ margin: "3px 0 0", fontSize: 12 }}>
+            {[
+              data.linkedin && <a key="li" href={ensureProtocol(data.linkedin)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.linkedin)}</a>,
+              data.github && <a key="gh" href={ensureProtocol(data.github)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.github)}</a>,
+              data.website && <a key="w" href={ensureProtocol(data.website)} style={{ color: "#000", textDecoration: "underline" }}>{shortUrl(data.website)}</a>,
+            ].filter(Boolean).reduce<React.ReactNode[]>((acc, el, i) => i === 0 ? [el] : [...acc, "  |  ", el], [])}
+          </p>
+        )}
       </header>
       <div style={{ height: 1, background: "#000", margin: "8px 0 14px" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {data.sectionOrder.map((id) => {
-          const body = renderBody(id, data);
+          const body = renderBody(id, data, { color: "#000" });
           if (!body) return null;
           return (
             <section key={id}>

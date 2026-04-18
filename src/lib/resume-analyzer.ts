@@ -207,8 +207,12 @@ export async function extractTextFromFile(file: File): Promise<string> {
 
 async function extractPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+  // Vite-friendly worker resolution
+  const workerUrl = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).toString();
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
   const buf = await file.arrayBuffer();
   const doc = await pdfjs.getDocument({ data: buf }).promise;
