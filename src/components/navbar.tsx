@@ -17,7 +17,7 @@ export function Navbar() {
               <Sparkles className="h-5 w-5" strokeWidth={2.5} />
             </motion.div>
             <span className="font-display text-lg font-bold tracking-tight">
-              Resume<span className="text-neon dark:text-neon">.AI</span>
+              CVify<span className="text-neon dark:text-neon">.AI</span>
             </span>
           </Link>
 
