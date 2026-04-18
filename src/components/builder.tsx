@@ -22,6 +22,9 @@ import {
   calculateAtsScore, completionPercent, improveBullet, isValidUrl,
 } from "@/lib/resume";
 import { exportResumePdf } from "@/lib/pdf-export";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "./auth-provider";
+import { saveResume, loadResume } from "@/lib/resume-store";
 
 const STEPS = [
   { id: 1, label: "Basics", icon: User },
@@ -62,22 +65,62 @@ export function Builder() {
   const previewWrapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Hydrate from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<ResumeData>;
-        setData((d) => ({ ...d, ...parsed, sectionOrder: parsed.sectionOrder ?? d.sectionOrder }));
-      }
-    } catch { /* ignore */ }
-    setHydrated(true);
-  }, []);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [cloudStatus, setCloudStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Redirect unauthenticated users to /login
+  useEffect(() => {
+    if (!authLoading && !user) navigate({ to: "/login" });
+  }, [authLoading, user, navigate]);
+
+  // Hydrate: prefer Firestore, fall back to localStorage
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cloud = await loadResume(user.uid);
+        if (cancelled) return;
+        if (cloud) {
+          setData((d) => ({ ...d, ...cloud, sectionOrder: cloud.sectionOrder ?? d.sectionOrder }));
+        } else {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw) as Partial<ResumeData>;
+            setData((d) => ({ ...d, ...parsed, sectionOrder: parsed.sectionOrder ?? d.sectionOrder }));
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load resume:", e);
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Auto-save to localStorage + Firestore (debounced)
   useEffect(() => {
     if (!hydrated) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
-  }, [data, hydrated]);
+    if (!user) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setCloudStatus("saving");
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await saveResume(user.uid, data);
+        setCloudStatus("saved");
+      } catch (e) {
+        console.warn("Cloud save failed:", e);
+        setCloudStatus("error");
+      }
+    }, 1200);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [data, hydrated, user]);
 
   const { score, suggestions, warnings } = calculateAtsScore(data);
   const completion = completionPercent(data);
@@ -190,6 +233,25 @@ export function Builder() {
         <button onClick={loadDemo} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <Wand2 className="h-3.5 w-3.5" /> Try Demo Resume
         </button>
+        {user && (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${
+              cloudStatus === "saving"
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                : cloudStatus === "saved"
+                ? "border-neon/30 bg-neon/10 text-neon"
+                : cloudStatus === "error"
+                ? "border-destructive/30 bg-destructive/10 text-destructive"
+                : "border-border bg-muted text-muted-foreground"
+            }`}
+            title="Auto-saving to your Google account"
+          >
+            {cloudStatus === "saving" && <Loader2 className="h-3 w-3 animate-spin" />}
+            {cloudStatus === "saved" && <Check className="h-3 w-3" />}
+            {cloudStatus === "error" && <AlertTriangle className="h-3 w-3" />}
+            {cloudStatus === "saving" ? "Saving…" : cloudStatus === "saved" ? "Saved to cloud" : cloudStatus === "error" ? "Save failed" : "Cloud sync"}
+          </span>
+        )}
         <button onClick={resetAll} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <X className="h-3.5 w-3.5" /> Reset
         </button>

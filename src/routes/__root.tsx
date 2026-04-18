@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-r
 import appCss from "../styles.css?url";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { AuthProvider } from "@/components/auth-provider";
 
 function NotFoundComponent() {
   return (
@@ -52,10 +53,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <Navbar />
-        <Outlet />
-      </div>
+      <AuthProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <Navbar />
+          <Outlet />
+        </div>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
