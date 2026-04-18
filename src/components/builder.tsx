@@ -330,6 +330,18 @@ export function Builder() {
                       className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-neon focus:outline-none focus:ring-2 focus:ring-neon/30"
                     />
                   </div>
+
+                  {/* Professional links */}
+                  <div className="mt-5">
+                    <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <Globe className="h-3.5 w-3.5 text-neon" /> Professional Links
+                    </p>
+                    <div className="space-y-3">
+                      <UrlField icon={Linkedin} label="LinkedIn" value={data.linkedin ?? ""} onChange={(v) => update("linkedin", v)} placeholder="https://linkedin.com/in/yourname" />
+                      <UrlField icon={Github} label="GitHub" value={data.github ?? ""} onChange={(v) => update("github", v)} placeholder="https://github.com/yourname" />
+                      <UrlField icon={Globe} label="Portfolio / Website" value={data.website ?? ""} onChange={(v) => update("website", v)} placeholder="https://yourname.dev" />
+                    </div>
+                  </div>
                 </StepWrap>
               )}
 
