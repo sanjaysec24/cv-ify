@@ -22,7 +22,6 @@ import {
   Github,
   Save,
   X,
-  Download,
   Activity,
   User as UserIcon,
   ListChecks,
@@ -41,7 +40,7 @@ import {
   type UserProfile,
 } from "@/lib/user-profile";
 import { calculateAtsScore, STORAGE_KEY, type ResumeData } from "@/lib/resume";
-import { exportResumePdf } from "@/lib/pdf-export";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -80,7 +79,7 @@ function ProfilePage() {
   const [resumes, setResumes] = useState<ResumeListItem[] | null>(null);
   const [loadingResumes, setLoadingResumes] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  
 
   // feedback toast
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -369,10 +368,8 @@ function ProfilePage() {
             loading={loadingResumes}
             resumes={resumes}
             deleteId={deleteId}
-            downloadingId={downloadingId}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onDownload={handleDownload}
           />
         )}
 
