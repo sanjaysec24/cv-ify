@@ -109,7 +109,7 @@ export async function deleteResumeById(resumeId: string) {
  */
 const WEB3FORMS_ACCESS_KEY =
   (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) ??
-  "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
+  "a780759a-16a5-4f37-9bd8-4ba2d30c6d8f";
 
 const ADMIN_EMAIL = "sanjaykumarbjc@gmail.com";
 
