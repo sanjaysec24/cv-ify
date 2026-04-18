@@ -22,12 +22,17 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) =
     <div
       ref={ref}
       data-resume-root
-      className="mx-auto w-full max-w-[820px] aspect-[1/1.414] overflow-hidden shadow-2xl"
+      className="resume-container mx-auto overflow-hidden shadow-2xl"
       style={{
+        width: "794px",
+        height: "1123px",
         backgroundColor: "#ffffff",
         color: "#111827",
         fontFamily: "Inter, sans-serif",
         lineHeight: 1.5,
+        boxSizing: "border-box",
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
       }}
     >
       <Tpl data={data} />
