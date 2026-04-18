@@ -161,3 +161,18 @@
   }
   .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 }
+
+@media print {
+  body { margin: 0; padding: 0; background: #ffffff; }
+  .resume-container {
+    width: 794px !important;
+    height: 1123px !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+  }
+  .resume-container section,
+  .resume-container aside,
+  .resume-container header { break-inside: avoid; page-break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
