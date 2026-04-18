@@ -154,11 +154,13 @@ function renderBody(id: SectionId, data: ResumeData, opts: { compact?: boolean; 
       ) : null;
     case "projects":
       return data.projects.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {data.projects.map((p, i) => (
             <div key={i}>
               <h3 style={{ fontSize: fs + 1, fontWeight: 600, margin: 0, color: "#111827" }}>{p.title || "Untitled Project"}</h3>
               {p.description && <p style={{ fontSize: fs, lineHeight: 1.55, color: "#374151", margin: "3px 0 0" }}>{p.description}</p>}
+              {p.tech && <p style={{ fontSize: sub, color: "#4b5563", margin: "3px 0 0" }}><span style={{ fontWeight: 600 }}>Tech:</span> {p.tech}</p>}
+              <ProjectLinks p={p} color={opts.color ?? data.primaryColor ?? "#111827"} />
             </div>
           ))}
         </div>
