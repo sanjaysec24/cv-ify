@@ -102,14 +102,62 @@ export async function deleteResumeById(resumeId: string) {
   await deleteDoc(doc(getDb(), "resumes", resumeId));
 }
 
+/**
+ * Web3Forms access key — sends feedback emails to sanjaykumarbjc@gmail.com.
+ * Get a free key at https://web3forms.com (enter your Gmail, they email you the key).
+ * Replace the placeholder below with your real key.
+ */
+const WEB3FORMS_ACCESS_KEY =
+  (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) ??
+  "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
+
+const ADMIN_EMAIL = "sanjaykumarbjc@gmail.com";
+
+async function emailFeedbackToAdmin(input: {
+  name: string;
+  email: string;
+  message: string;
+  userId: string;
+}) {
+  if (
+    !WEB3FORMS_ACCESS_KEY ||
+    WEB3FORMS_ACCESS_KEY === "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY"
+  ) {
+    console.warn("[feedback] Web3Forms key missing — skipping email to admin.");
+    return;
+  }
+  try {
+    const res = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_ACCESS_KEY,
+        subject: `New CVify Feedback from ${input.name || input.email || "User"}`,
+        from_name: "CVify.AI Feedback",
+        to: ADMIN_EMAIL,
+        name: input.name || "Anonymous",
+        email: input.email || "no-reply@cvify.ai",
+        replyto: input.email || undefined,
+        message: `${input.message}\n\n---\nUser ID: ${input.userId}\nUser Email: ${input.email}\nSent: ${new Date().toLocaleString()}`,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
+    if (!res.ok || !data.success) {
+      console.warn("[feedback] Web3Forms send failed:", data.message ?? res.statusText);
+    }
+  } catch (e) {
+    console.warn("[feedback] Web3Forms request error:", e);
+  }
+}
+
 export async function submitFeedback(input: {
   userId: string;
   name: string;
   email: string;
   message: string;
 }) {
-  // Use a deterministic-ish id per submission to avoid extra deps; doc auto via setDoc + random id
   const id = `${input.userId}_${Date.now()}`;
+  // 1) Save to Firestore (audit trail)
   await setDoc(doc(getDb(), "feedback", id), {
     userId: input.userId,
     name: input.name,
@@ -117,4 +165,6 @@ export async function submitFeedback(input: {
     message: input.message,
     createdAt: serverTimestamp(),
   });
+  // 2) Email admin (best-effort, won't block UI on failure)
+  await emailFeedbackToAdmin(input);
 }
