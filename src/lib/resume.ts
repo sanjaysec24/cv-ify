@@ -141,11 +141,26 @@ export const DEMO_DATA: ResumeData = {
   phone: "+91 98765 43210",
   location: "Bengaluru, India",
   role: "Frontend Developer",
+  linkedin: "https://linkedin.com/in/aanyasharma",
+  github: "https://github.com/aanyasharma",
+  website: "https://aanya.dev",
   summary: "Final-year CS student passionate about building delightful, accessible web experiences. Strong fundamentals in React, TypeScript and modern UI engineering.",
   skills: ["React", "TypeScript", "Tailwind CSS", "Next.js", "Vite", "Figma", "Jest", "GraphQL"],
   projects: [
-    { title: "Pulse — Realtime Dashboard", description: "Engineered a real-time analytics dashboard with React and WebSockets, reducing perceived load time by 40% and supporting 10k concurrent users." },
-    { title: "StudyHive — Collab Notes", description: "Designed a collaborative notes platform with offline sync and rich-text editing, growing to 2,000 weekly active student users." },
+    {
+      title: "Pulse — Realtime Dashboard",
+      description: "Engineered a real-time analytics dashboard with React and WebSockets, reducing perceived load time by 40% and supporting 10k concurrent users.",
+      tech: "React, TypeScript, WebSockets, Node.js",
+      github: "https://github.com/aanyasharma/pulse",
+      demo: "https://pulse-demo.vercel.app",
+    },
+    {
+      title: "StudyHive — Collab Notes",
+      description: "Designed a collaborative notes platform with offline sync and rich-text editing, growing to 2,000 weekly active student users.",
+      tech: "Next.js, Supabase, TipTap",
+      github: "https://github.com/aanyasharma/studyhive",
+      demo: "https://studyhive.app",
+    },
   ],
   experience: [
     { company: "Lumen Labs", role: "Frontend Intern", duration: "Jun 2024 – Aug 2024", description: "Shipped 12+ UI components used across 3 products, improving design-system coverage by 60%." },
@@ -160,4 +175,37 @@ export const DEMO_DATA: ResumeData = {
   showIcons: true,
 };
 
-export const STORAGE_KEY = "cvify.resume.v3";
+export const STORAGE_KEY = "cvify.resume.v4";
+
+/** Validate a URL — accepts http(s) only. Empty string is valid (optional). */
+export function isValidUrl(value: string): boolean {
+  if (!value.trim()) return true;
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/** Convert a long URL to short readable form (e.g. linkedin.com/in/foo). */
+export function shortUrl(value?: string): string {
+  if (!value) return "";
+  try {
+    const u = new URL(ensureProtocol(value));
+    let s = u.host.replace(/^www\./, "") + u.pathname.replace(/\/$/, "");
+    if (s.length > 42) s = s.slice(0, 39) + "…";
+    return s;
+  } catch {
+    return value;
+  }
+}
+
+/** Ensure a URL has a protocol so anchor href works. */
+export function ensureProtocol(value?: string): string {
+  if (!value) return "";
+  const v = value.trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
