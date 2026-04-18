@@ -1,19 +1,33 @@
 import { forwardRef } from "react";
-import type { ResumeData, SectionId } from "@/lib/resume";
-import { Mail, Phone, MapPin } from "lucide-react";
+import type { ResumeData, SectionId, TemplateId } from "@/lib/resume";
+import {
+  Mail, Phone, MapPin, User2, Wrench, FolderGit2, Briefcase, GraduationCap,
+} from "lucide-react";
 
 type Props = { data: ResumeData };
 
+const SECTION_TITLE: Record<SectionId, string> = {
+  summary: "Summary", skills: "Skills", projects: "Projects",
+  experience: "Experience", education: "Education",
+};
+const SECTION_ICON: Record<SectionId, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  summary: User2, skills: Wrench, projects: FolderGit2,
+  experience: Briefcase, education: GraduationCap,
+};
+
 export const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
-  const Tpl =
-    data.template === "sidebar" ? SidebarTemplate :
-    data.template === "creative" ? CreativeTemplate :
-    ModernTemplate;
+  const Tpl = pickTemplate(data.template);
   return (
     <div
       ref={ref}
-      className="bg-white text-neutral-900 mx-auto w-full max-w-[820px] aspect-[1/1.414] shadow-2xl overflow-hidden"
-      style={{ fontFamily: "Inter, sans-serif" }}
+      data-resume-root
+      className="mx-auto w-full max-w-[820px] aspect-[1/1.414] overflow-hidden shadow-2xl"
+      style={{
+        backgroundColor: "#ffffff",
+        color: "#111827",
+        fontFamily: "Inter, sans-serif",
+        lineHeight: 1.5,
+      }}
     >
       <Tpl data={data} />
     </div>
@@ -21,57 +35,122 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) =
 });
 ResumePreview.displayName = "ResumePreview";
 
-/* -------------------- Helpers -------------------- */
+function pickTemplate(id: TemplateId) {
+  switch (id) {
+    case "sidebar": return SidebarTemplate;
+    case "creative": return CreativeTemplate;
+    case "classic": return ClassicTemplate;
+    case "minimal": return MinimalTemplate;
+    case "compact": return CompactTemplate;
+    case "modern":
+    default: return ModernTemplate;
+  }
+}
 
-function renderSection(id: SectionId, data: ResumeData, opts: { compact?: boolean } = {}) {
+/* ---------------- shared bits ---------------- */
+
+function Photo({ src, size = 84, ring = "#e5e7eb" }: { src?: string; size?: number; ring?: string }) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt="Profile"
+      style={{
+        width: size, height: size, borderRadius: "9999px",
+        objectFit: "cover", border: `3px solid ${ring}`,
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+function ContactRow({ data, color = "#4b5563" }: { data: ResumeData; color?: string }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12, color }}>
+      {data.email && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} />{data.email}</span>}
+      {data.phone && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</span>}
+      {data.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</span>}
+    </div>
+  );
+}
+
+function SectionTitle({
+  id, color, showIcons, underline = true, size = 13,
+}: { id: SectionId; color: string; showIcons: boolean; underline?: boolean; size?: number }) {
+  const Icon = SECTION_ICON[id];
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <h2 style={{
+        fontSize: size, fontWeight: 700, letterSpacing: "0.16em",
+        textTransform: "uppercase", color,
+        display: "inline-flex", alignItems: "center", gap: 6,
+        margin: 0,
+      }}>
+        {showIcons && <Icon style={{ width: 14, height: 14 }} />}
+        {SECTION_TITLE[id]}
+      </h2>
+      {underline && <div style={{ height: 2, background: color, marginTop: 4, width: 32, borderRadius: 2 }} />}
+    </div>
+  );
+}
+
+function renderBody(id: SectionId, data: ResumeData, opts: { compact?: boolean; color?: string } = {}) {
+  const fs = opts.compact ? 12 : 13;
+  const sub = opts.compact ? 11 : 12;
   switch (id) {
     case "summary":
       return data.summary ? (
-        <p className={`leading-relaxed text-neutral-700 ${opts.compact ? "text-[11px]" : "text-sm"}`}>{data.summary}</p>
+        <p style={{ fontSize: fs, lineHeight: 1.55, color: "#374151", margin: 0 }}>{data.summary}</p>
       ) : null;
     case "skills":
       return data.skills.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {data.skills.map((s) => (
-            <span key={s} className="rounded border border-neutral-300 bg-neutral-50 px-2 py-0.5 text-[11px]">{s}</span>
+            <span key={s} style={{
+              fontSize: sub, padding: "3px 9px", borderRadius: 4,
+              background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#1f2937",
+            }}>{s}</span>
           ))}
         </div>
       ) : null;
     case "projects":
       return data.projects.length > 0 ? (
-        <div className="space-y-2.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.projects.map((p, i) => (
             <div key={i}>
-              <h3 className="text-sm font-semibold">{p.title || "Untitled Project"}</h3>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-neutral-700">{p.description}</p>
+              <h3 style={{ fontSize: fs + 1, fontWeight: 600, margin: 0, color: "#111827" }}>{p.title || "Untitled Project"}</h3>
+              {p.description && <p style={{ fontSize: fs, lineHeight: 1.55, color: "#374151", margin: "3px 0 0" }}>{p.description}</p>}
             </div>
           ))}
         </div>
       ) : null;
     case "experience":
       return data.experience.length > 0 ? (
-        <div className="space-y-2.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.experience.map((e, i) => (
             <div key={i}>
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="text-sm font-semibold">{e.role} <span className="font-normal text-neutral-600">— {e.company}</span></h3>
-                <span className="text-[11px] text-neutral-500">{e.duration}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                <h3 style={{ fontSize: fs + 1, fontWeight: 600, margin: 0, color: "#111827" }}>
+                  {e.role}
+                  {e.company && <span style={{ fontWeight: 400, color: "#4b5563" }}> — {e.company}</span>}
+                </h3>
+                {e.duration && <span style={{ fontSize: sub, color: "#6b7280", whiteSpace: "nowrap" }}>{e.duration}</span>}
               </div>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-neutral-700">{e.description}</p>
+              {e.description && <p style={{ fontSize: fs, lineHeight: 1.55, color: "#374151", margin: "3px 0 0" }}>{e.description}</p>}
             </div>
           ))}
         </div>
       ) : null;
     case "education":
       return data.education.length > 0 ? (
-        <div className="space-y-1.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {data.education.map((e, i) => (
-            <div key={i} className="flex items-baseline justify-between gap-3">
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
               <div>
-                <h3 className="text-sm font-semibold">{e.school}</h3>
-                <p className="text-[11.5px] text-neutral-700">{e.degree}</p>
+                <h3 style={{ fontSize: fs + 1, fontWeight: 600, margin: 0, color: "#111827" }}>{e.school}</h3>
+                {e.degree && <p style={{ fontSize: fs, color: "#374151", margin: "2px 0 0" }}>{e.degree}</p>}
               </div>
-              <span className="text-[11px] text-neutral-500">{e.year}</span>
+              {e.year && <span style={{ fontSize: sub, color: "#6b7280", whiteSpace: "nowrap" }}>{e.year}</span>}
             </div>
           ))}
         </div>
@@ -79,129 +158,29 @@ function renderSection(id: SectionId, data: ResumeData, opts: { compact?: boolea
   }
 }
 
-function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <h2
-      style={{ fontFamily: "Space Grotesk, sans-serif" }}
-      className={`mb-2 text-[11px] font-bold uppercase tracking-[0.18em] ${className}`}
-    >
-      {children}
-    </h2>
-  );
-}
-
-const SECTION_TITLE: Record<SectionId, string> = {
-  summary: "Summary", skills: "Skills", projects: "Projects", experience: "Experience", education: "Education",
-};
-
-/* -------------------- Modern (clean, dividers) -------------------- */
+/* ---------------- 1. Modern Professional ---------------- */
 
 function ModernTemplate({ data }: Props) {
+  const c = data.primaryColor;
   return (
-    <div style={{ padding: "44px 52px" }}>
-      <header className="border-b-2 border-neutral-900 pb-3">
-        <h1 style={{ fontFamily: "Space Grotesk, sans-serif" }} className="text-[34px] font-bold tracking-tight leading-tight">
-          {data.name || "Your Name"}
-        </h1>
-        {data.role && <p className="mt-0.5 text-sm font-medium text-neutral-700">{data.role}</p>}
-        <ContactRow data={data} className="mt-2" />
-      </header>
-      {data.sectionOrder.map((id) => {
-        const body = renderSection(id, data);
-        if (!body) return null;
-        return (
-          <section key={id} className="mt-4 border-b border-neutral-200 pb-3 last:border-0">
-            <SectionLabel className="text-neutral-900">{SECTION_TITLE[id]}</SectionLabel>
-            {body}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
-/* -------------------- Sidebar (left dark sidebar) -------------------- */
-
-function SidebarTemplate({ data }: Props) {
-  const sidebarIds: SectionId[] = ["skills", "education"];
-  const mainIds = data.sectionOrder.filter((id) => !sidebarIds.includes(id));
-  return (
-    <div className="grid h-full grid-cols-[34%_1fr]">
-      <aside className="bg-neutral-900 p-6 text-neutral-100">
-        <h1 style={{ fontFamily: "Space Grotesk, sans-serif" }} className="text-[24px] font-bold leading-tight">
-          {data.name || "Your Name"}
-        </h1>
-        {data.role && <p className="mt-1 text-[12px] text-neutral-300">{data.role}</p>}
-        <div className="mt-4 space-y-1.5 text-[11px] text-neutral-300">
-          {data.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{data.email}</div>}
-          {data.phone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{data.phone}</div>}
-          {data.location && <div className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{data.location}</div>}
+    <div style={{ padding: "44px 52px", fontFamily: "Inter, sans-serif" }}>
+      <header style={{ display: "flex", gap: 20, alignItems: "center", paddingBottom: 14, borderBottom: `3px solid ${c}` }}>
+        {data.photo && <Photo src={data.photo} ring={c} />}
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.1, margin: 0, color: "#111827", letterSpacing: "-0.02em" }}>
+            {data.name || "Your Name"}
+          </h1>
+          {data.role && <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 500, color: c }}>{data.role}</p>}
+          <div style={{ marginTop: 8 }}><ContactRow data={data} /></div>
         </div>
-        {data.skills.length > 0 && (
-          <div className="mt-5">
-            <SectionLabel className="text-neutral-100">Skills</SectionLabel>
-            <div className="flex flex-wrap gap-1">
-              {data.skills.map((s) => (
-                <span key={s} className="rounded bg-neutral-800 px-2 py-0.5 text-[10.5px] text-neutral-100">{s}</span>
-              ))}
-            </div>
-          </div>
-        )}
-        {data.education.length > 0 && (
-          <div className="mt-5">
-            <SectionLabel className="text-neutral-100">Education</SectionLabel>
-            <div className="space-y-1.5">
-              {data.education.map((e, i) => (
-                <div key={i}>
-                  <p className="text-[12px] font-semibold">{e.school}</p>
-                  <p className="text-[10.5px] text-neutral-400">{e.degree}</p>
-                  <p className="text-[10px] text-neutral-500">{e.year}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </aside>
-      <main className="p-6 text-neutral-900">
-        {mainIds.map((id) => {
-          const body = renderSection(id, data);
-          if (!body) return null;
-          return (
-            <section key={id} className="mb-4">
-              <SectionLabel className="text-neutral-900">{SECTION_TITLE[id]}</SectionLabel>
-              {body}
-            </section>
-          );
-        })}
-      </main>
-    </div>
-  );
-}
-
-/* -------------------- Creative (cards) -------------------- */
-
-function CreativeTemplate({ data }: Props) {
-  return (
-    <div className="bg-amber-50/60 p-6">
-      <header className="rounded-2xl bg-white p-5 shadow-sm">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 style={{ fontFamily: "Space Grotesk, sans-serif" }} className="text-[30px] font-bold leading-tight tracking-tight">
-              {data.name || "Your Name"}
-            </h1>
-            {data.role && <p className="mt-0.5 text-sm font-medium text-amber-700">{data.role}</p>}
-          </div>
-          <div className="rounded-full bg-amber-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-900">CV</div>
-        </div>
-        <ContactRow data={data} className="mt-3" />
       </header>
-      <div className="mt-3 grid grid-cols-1 gap-3">
+      <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 16 }}>
         {data.sectionOrder.map((id) => {
-          const body = renderSection(id, data);
+          const body = renderBody(id, data);
           if (!body) return null;
           return (
-            <section key={id} className="rounded-2xl bg-white p-4 shadow-sm">
-              <SectionLabel className="text-amber-900">{SECTION_TITLE[id]}</SectionLabel>
+            <section key={id}>
+              <SectionTitle id={id} color={c} showIcons={data.showIcons} />
               {body}
             </section>
           );
@@ -211,12 +190,222 @@ function CreativeTemplate({ data }: Props) {
   );
 }
 
-function ContactRow({ data, className = "" }: { data: ResumeData; className?: string }) {
+/* ---------------- 2. Sidebar Profile ---------------- */
+
+function SidebarTemplate({ data }: Props) {
+  const sidebarIds: SectionId[] = ["skills", "education"];
+  const mainIds = data.sectionOrder.filter((id) => !sidebarIds.includes(id));
+  const c = data.primaryColor;
   return (
-    <div className={`flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-600 ${className}`}>
-      {data.email && <span className="inline-flex items-center gap-1.5"><Mail className="h-3 w-3" />{data.email}</span>}
-      {data.phone && <span className="inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />{data.phone}</span>}
-      {data.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3" />{data.location}</span>}
+    <div style={{ display: "grid", gridTemplateColumns: "34% 1fr", height: "100%" }}>
+      <aside style={{ background: c, color: "#ffffff", padding: "32px 22px" }}>
+        {data.photo && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <Photo src={data.photo} size={96} ring="#ffffff" />
+          </div>
+        )}
+        <h1 style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.15, margin: 0, color: "#ffffff" }}>
+          {data.name || "Your Name"}
+        </h1>
+        {data.role && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.85)" }}>{data.role}</p>}
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, fontSize: 11.5, color: "rgba(255,255,255,0.92)" }}>
+          {data.email && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></div>}
+          {data.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</div>}
+          {data.location && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</div>}
+        </div>
+        {data.skills.length > 0 && (
+          <div style={{ marginTop: 22 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", color: "#ffffff" }}>Skills</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {data.skills.map((s) => (
+                <span key={s} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.15)", color: "#ffffff" }}>{s}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {data.education.length > 0 && (
+          <div style={{ marginTop: 22 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", color: "#ffffff" }}>Education</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {data.education.map((e, i) => (
+                <div key={i}>
+                  <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0, color: "#ffffff" }}>{e.school}</p>
+                  {e.degree && <p style={{ fontSize: 11, margin: "2px 0 0", color: "rgba(255,255,255,0.85)" }}>{e.degree}</p>}
+                  {e.year && <p style={{ fontSize: 10.5, margin: "1px 0 0", color: "rgba(255,255,255,0.7)" }}>{e.year}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
+      <main style={{ padding: "32px 28px", color: "#111827" }}>
+        {mainIds.map((id) => {
+          const body = renderBody(id, data);
+          if (!body) return null;
+          return (
+            <section key={id} style={{ marginBottom: 16 }}>
+              <SectionTitle id={id} color={c} showIcons={data.showIcons} />
+              {body}
+            </section>
+          );
+        })}
+      </main>
     </div>
   );
+}
+
+/* ---------------- 3. Creative Card Layout ---------------- */
+
+function CreativeTemplate({ data }: Props) {
+  const c = data.primaryColor;
+  const tint = hexWithAlpha(c, 0.08);
+  return (
+    <div style={{ background: tint, padding: 24, fontFamily: "Inter, sans-serif" }}>
+      <header style={{ background: "#ffffff", borderRadius: 18, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", display: "flex", gap: 16, alignItems: "center" }}>
+        {data.photo && <Photo src={data.photo} ring={c} />}
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 800, margin: 0, color: "#111827", letterSpacing: "-0.02em" }}>
+            {data.name || "Your Name"}
+          </h1>
+          {data.role && <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 600, color: c }}>{data.role}</p>}
+          <div style={{ marginTop: 10 }}><ContactRow data={data} /></div>
+        </div>
+        <div style={{ background: c, color: "#ffffff", padding: "5px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>CV</div>
+      </header>
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+        {data.sectionOrder.map((id) => {
+          const body = renderBody(id, data);
+          if (!body) return null;
+          return (
+            <section key={id} style={{ background: "#ffffff", borderRadius: 16, padding: 18, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <SectionTitle id={id} color={c} showIcons={data.showIcons} underline={false} />
+              {body}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 4. Classic ATS (B&W, no icons, no color) ---------------- */
+
+function ClassicTemplate({ data }: Props) {
+  return (
+    <div style={{ padding: "48px 56px", fontFamily: "'Times New Roman', serif", color: "#000000" }}>
+      <header style={{ textAlign: "center", marginBottom: 14 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "0.04em" }}>
+          {(data.name || "Your Name").toUpperCase()}
+        </h1>
+        {data.role && <p style={{ margin: "4px 0 0", fontSize: 13, fontStyle: "italic" }}>{data.role}</p>}
+        <p style={{ margin: "6px 0 0", fontSize: 12 }}>
+          {[data.email, data.phone, data.location].filter(Boolean).join("  |  ")}
+        </p>
+      </header>
+      <div style={{ height: 1, background: "#000", margin: "8px 0 14px" }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {data.sectionOrder.map((id) => {
+          const body = renderBody(id, data);
+          if (!body) return null;
+          return (
+            <section key={id}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 4px", color: "#000" }}>
+                {SECTION_TITLE[id]}
+              </h2>
+              <div style={{ height: 1, background: "#000", marginBottom: 8 }} />
+              {body}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 5. Minimal Elegant ---------------- */
+
+function MinimalTemplate({ data }: Props) {
+  const c = data.primaryColor;
+  return (
+    <div style={{ padding: "60px 72px", fontFamily: "Inter, sans-serif" }}>
+      <header style={{ textAlign: "center", marginBottom: 26 }}>
+        {data.photo && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <Photo src={data.photo} size={88} ring={c} />
+          </div>
+        )}
+        <h1 style={{ fontSize: 30, fontWeight: 300, letterSpacing: "0.18em", margin: 0, color: "#111827", textTransform: "uppercase" }}>
+          {data.name || "Your Name"}
+        </h1>
+        {data.role && <p style={{ margin: "8px 0 0", fontSize: 13, color: c, letterSpacing: "0.06em" }}>{data.role}</p>}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+          <div style={{ height: 1, width: 56, background: c }} />
+        </div>
+        <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+          <ContactRow data={data} />
+        </div>
+      </header>
+      <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+        {data.sectionOrder.map((id) => {
+          const body = renderBody(id, data);
+          if (!body) return null;
+          return (
+            <section key={id}>
+              <div style={{ textAlign: "center", marginBottom: 10 }}>
+                <h2 style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.24em", textTransform: "uppercase", margin: 0, color: "#111827" }}>
+                  {SECTION_TITLE[id]}
+                </h2>
+                <div style={{ height: 1, width: 28, background: c, margin: "6px auto 0" }} />
+              </div>
+              {body}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 6. Compact One-Page ---------------- */
+
+function CompactTemplate({ data }: Props) {
+  const c = data.primaryColor;
+  return (
+    <div style={{ padding: "28px 36px", fontFamily: "Inter, sans-serif" }}>
+      <header style={{ display: "flex", gap: 14, alignItems: "center", paddingBottom: 8, borderBottom: `2px solid ${c}` }}>
+        {data.photo && <Photo src={data.photo} size={64} ring={c} />}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: "#111827", letterSpacing: "-0.02em" }}>
+              {data.name || "Your Name"}
+            </h1>
+            {data.role && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: c }}>{data.role}</p>}
+          </div>
+          <div style={{ marginTop: 4 }}><ContactRow data={data} /></div>
+        </div>
+      </header>
+      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 9 }}>
+        {data.sectionOrder.map((id) => {
+          const body = renderBody(id, data, { compact: true });
+          if (!body) return null;
+          return (
+            <section key={id}>
+              <SectionTitle id={id} color={c} showIcons={data.showIcons} underline={false} size={11} />
+              {body}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- utils ---------------- */
+
+function hexWithAlpha(hex: string, alpha: number): string {
+  const m = hex.replace("#", "");
+  const r = parseInt(m.substring(0, 2), 16);
+  const g = parseInt(m.substring(2, 4), 16);
+  const b = parseInt(m.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

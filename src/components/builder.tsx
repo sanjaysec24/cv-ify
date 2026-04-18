@@ -11,11 +11,13 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   User, Wrench, FolderGit2, Briefcase, GraduationCap,
   Sparkles, Plus, X, Download, Check, AlertTriangle, Loader2, ArrowRight, ArrowLeft,
-  GripVertical, Wand2, LayoutTemplate,
+  GripVertical, Wand2, LayoutTemplate, Image as ImageIcon, Palette,
+  ZoomIn, ZoomOut, Eye,
 } from "lucide-react";
 import { ResumePreview } from "./resume-preview";
 import {
-  type ResumeData, type SectionId, ROLES, ROLE_SKILLS, SECTION_LABELS,
+  type ResumeData, type SectionId, type TemplateId,
+  ROLES, ROLE_SKILLS, SECTION_LABELS, COLOR_PRESETS,
   DEFAULT_SECTION_ORDER, DEMO_DATA, STORAGE_KEY,
   calculateAtsScore, completionPercent, improveBullet,
 } from "@/lib/resume";
@@ -33,12 +35,19 @@ const initial: ResumeData = {
   name: "", email: "", phone: "", location: "", role: "", summary: "",
   skills: [], projects: [], experience: [], education: [],
   template: "modern", sectionOrder: DEFAULT_SECTION_ORDER,
+  photo: undefined,
+  primaryColor: COLOR_PRESETS[0].primary,
+  secondaryColor: COLOR_PRESETS[0].secondary,
+  showIcons: true,
 };
 
-const TEMPLATES: { id: ResumeData["template"]; label: string; desc: string }[] = [
-  { id: "modern", label: "Modern", desc: "Clean & minimal" },
-  { id: "sidebar", label: "Sidebar", desc: "Pro left rail" },
+const TEMPLATES: { id: TemplateId; label: string; desc: string }[] = [
+  { id: "modern", label: "Modern", desc: "Clean & professional" },
+  { id: "sidebar", label: "Sidebar", desc: "Photo sidebar" },
   { id: "creative", label: "Creative", desc: "Card style" },
+  { id: "classic", label: "Classic ATS", desc: "Pure B&W" },
+  { id: "minimal", label: "Minimal", desc: "Centered & airy" },
+  { id: "compact", label: "Compact", desc: "One-page dense" },
 ];
 
 export function Builder() {
@@ -49,7 +58,9 @@ export function Builder() {
   const [improvingIdx, setImprovingIdx] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [zoom, setZoom] = useState(0.78);
   const previewWrapRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -63,7 +74,6 @@ export function Builder() {
     setHydrated(true);
   }, []);
 
-  // Persist
   useEffect(() => {
     if (!hydrated) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
@@ -98,15 +108,36 @@ export function Builder() {
     setDownloading(true);
     try {
       await new Promise((r) => setTimeout(r, 200));
-      exportResumePdf(data);
+      await exportResumePdf(data.name);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2200);
+    } catch (e) {
+      console.error("PDF export failed", e);
     } finally {
       setDownloading(false);
     }
   };
 
-  const loadDemo = () => setData({ ...DEMO_DATA, template: data.template, sectionOrder: data.sectionOrder });
+  const onPhoto = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image is larger than 2MB. Please pick a smaller photo.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => update("photo", reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const loadDemo = () => setData({
+    ...DEMO_DATA,
+    template: data.template,
+    sectionOrder: data.sectionOrder,
+    primaryColor: data.primaryColor,
+    secondaryColor: data.secondaryColor,
+    showIcons: data.showIcons,
+    photo: data.photo,
+  });
   const resetAll = () => { if (confirm("Clear all resume data?")) setData(initial); };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -162,21 +193,67 @@ export function Builder() {
         <button onClick={resetAll} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <X className="h-3.5 w-3.5" /> Reset
         </button>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground"><LayoutTemplate className="h-3.5 w-3.5" /> Template</span>
-          <div className="flex rounded-full border border-border bg-background p-1">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => update("template", t.id)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                  data.template === t.id ? "bg-neon text-neon-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"
-                }`}
-                title={t.desc}
-              >
-                {t.label}
-              </button>
-            ))}
+        <label className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors">
+          <input type="checkbox" checked={data.showIcons} onChange={(e) => update("showIcons", e.target.checked)} className="accent-current" />
+          Section icons
+        </label>
+      </div>
+
+      {/* Template gallery */}
+      <div className="mb-4 glass rounded-2xl p-4">
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <LayoutTemplate className="h-3.5 w-3.5 text-neon" /> Template
+        </p>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => update("template", t.id)}
+              className={`group relative rounded-xl border-2 p-3 text-left transition-all ${
+                data.template === t.id
+                  ? "border-neon bg-neon/10 shadow-glow"
+                  : "border-border bg-background hover:border-neon/50"
+              }`}
+              title={t.desc}
+            >
+              <div className="text-sm font-bold">{t.label}</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">{t.desc}</div>
+              {data.template === t.id && (
+                <div className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-neon text-neon-foreground">
+                  <Check className="h-3 w-3" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Color customization */}
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Palette className="h-3.5 w-3.5 text-neon" /> Color Theme
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {COLOR_PRESETS.map((p) => {
+              const active = data.primaryColor.toLowerCase() === p.primary.toLowerCase();
+              return (
+                <button
+                  key={p.name}
+                  onClick={() => { update("primaryColor", p.primary); update("secondaryColor", p.secondary); }}
+                  className={`flex items-center gap-1.5 rounded-full border-2 px-2.5 py-1 text-xs font-semibold transition-all ${
+                    active ? "border-foreground" : "border-border hover:border-foreground/50"
+                  }`}
+                  title={p.name}
+                >
+                  <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ background: p.primary }} />
+                  {p.name}
+                </button>
+              );
+            })}
+            <label className="flex items-center gap-1.5 rounded-full border-2 border-border px-2.5 py-1 text-xs font-semibold cursor-pointer hover:border-foreground/50">
+              <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ background: data.primaryColor }} />
+              Custom
+              <input type="color" value={data.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="h-0 w-0 opacity-0" />
+            </label>
           </div>
         </div>
       </div>
@@ -194,6 +271,38 @@ export function Builder() {
             >
               {step === 1 && (
                 <StepWrap title="Basic Information" desc="Let's start with the essentials.">
+                  {/* Photo */}
+                  <div className="mb-5 flex items-center gap-4 rounded-2xl border border-border bg-background/50 p-4">
+                    {data.photo ? (
+                      <img src={data.photo} alt="profile" className="h-16 w-16 rounded-full object-cover border-2 border-neon" />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">Profile photo</p>
+                      <p className="text-xs text-muted-foreground">Optional. Shown on Sidebar / Modern / Creative templates.</p>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.target.value = ""; }}
+                        />
+                        <button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90">
+                          <Plus className="h-3.5 w-3.5" /> {data.photo ? "Change" : "Upload"}
+                        </button>
+                        {data.photo && (
+                          <button onClick={() => update("photo", undefined)} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
+                            <X className="h-3.5 w-3.5" /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Full Name" value={data.name} onChange={(v) => update("name", v)} placeholder="Jane Doe" />
                     <Field label="Email" value={data.email} onChange={(v) => update("email", v)} placeholder="jane@email.com" />
@@ -405,7 +514,7 @@ export function Builder() {
           {/* Section reordering */}
           <div className="mt-6 rounded-2xl border border-border bg-background/40 p-4">
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <GripVertical className="h-3.5 w-3.5 text-neon" /> Reorder Sections
+              <GripVertical className="h-3.5 w-3.5 text-neon" /> Reorder Sections (drag)
             </p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={data.sectionOrder} strategy={verticalListSortingStrategy}>
@@ -418,7 +527,6 @@ export function Builder() {
             </DndContext>
           </div>
 
-          {/* Weak resume detector */}
           {warnings.length > 0 && (
             <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-destructive">
@@ -444,13 +552,30 @@ export function Builder() {
 
         {/* RIGHT: preview */}
         <div className="lg:sticky lg:top-24 lg:h-fit">
+          {/* Zoom controls */}
+          <div className="mb-2 flex items-center justify-between rounded-full border border-border bg-background px-3 py-1.5 text-xs">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" /> Live Preview
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)))} className="flex h-6 w-6 items-center justify-center rounded-full border border-border hover:bg-accent">
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
+              <span className="w-10 text-center font-mono">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.1).toFixed(2)))} className="flex h-6 w-6 items-center justify-center rounded-full border border-border hover:bg-accent">
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
           <div ref={previewWrapRef} className="rounded-3xl bg-muted/40 p-4 lg:p-6 overflow-auto">
             <motion.div
               key={data.template}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="origin-top scale-[0.78] sm:scale-90 lg:scale-[0.72] xl:scale-90 -mb-[20%]"
+              className="origin-top"
+              style={{ transform: `scale(${zoom})`, marginBottom: `${-(1 - zoom) * 100}%` }}
             >
               <ResumePreview data={data} />
             </motion.div>

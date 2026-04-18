@@ -1,5 +1,13 @@
 export type SectionId = "summary" | "skills" | "projects" | "experience" | "education";
 
+export type TemplateId =
+  | "modern"
+  | "sidebar"
+  | "creative"
+  | "classic"
+  | "minimal"
+  | "compact";
+
 export type ResumeData = {
   name: string;
   email: string;
@@ -11,8 +19,16 @@ export type ResumeData = {
   projects: { title: string; description: string }[];
   experience: { company: string; role: string; duration: string; description: string }[];
   education: { school: string; degree: string; year: string }[];
-  template: "modern" | "sidebar" | "creative";
+  template: TemplateId;
   sectionOrder: SectionId[];
+  /** base64 data URL */
+  photo?: string;
+  /** primary accent color (hex) — used for headings, lines, accents */
+  primaryColor: string;
+  /** secondary accent (hex) */
+  secondaryColor: string;
+  /** show lucide icons next to section titles in the resume */
+  showIcons: boolean;
 };
 
 export const DEFAULT_SECTION_ORDER: SectionId[] = ["summary", "skills", "projects", "experience", "education"];
@@ -24,6 +40,15 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   experience: "Experience",
   education: "Education",
 };
+
+export const COLOR_PRESETS: { name: string; primary: string; secondary: string }[] = [
+  { name: "Yellow", primary: "#CA8A04", secondary: "#FACC15" },
+  { name: "Blue", primary: "#1D4ED8", secondary: "#60A5FA" },
+  { name: "Green", primary: "#047857", secondary: "#34D399" },
+  { name: "Black", primary: "#111111", secondary: "#444444" },
+  { name: "Plum", primary: "#7C3AED", secondary: "#C4B5FD" },
+  { name: "Crimson", primary: "#BE123C", secondary: "#FB7185" },
+];
 
 export const ROLE_SKILLS: Record<string, string[]> = {
   "Frontend Developer": ["React", "TypeScript", "Tailwind CSS", "Next.js", "Redux", "Vite", "Jest", "Figma"],
@@ -77,7 +102,6 @@ export function calculateAtsScore(data: ResumeData): { score: number; suggestion
   if (data.education.length > 0) score += 5;
   else warnings.push("No education added");
 
-  // Keyword match bonus
   if (data.role && ROLE_SKILLS[data.role]) {
     const target = ROLE_SKILLS[data.role].map(s => s.toLowerCase());
     const matched = data.skills.filter(s => target.includes(s.toLowerCase())).length;
@@ -119,6 +143,9 @@ export const DEMO_DATA: ResumeData = {
   ],
   template: "modern",
   sectionOrder: DEFAULT_SECTION_ORDER,
+  primaryColor: "#CA8A04",
+  secondaryColor: "#FACC15",
+  showIcons: true,
 };
 
-export const STORAGE_KEY = "cvify.resume.v2";
+export const STORAGE_KEY = "cvify.resume.v3";
