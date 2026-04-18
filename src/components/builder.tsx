@@ -697,6 +697,35 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   );
 }
 
+function UrlField({
+  icon: Icon, label, value, onChange, placeholder, compact,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  compact?: boolean;
+}) {
+  const valid = isValidUrl(value);
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</label>
+      <div className={`flex items-center gap-2 rounded-xl border bg-background px-3 ${compact ? "py-1.5" : "py-2.5"} focus-within:border-neon focus-within:ring-2 focus-within:ring-neon/30 ${valid ? "border-border" : "border-destructive"}`}>
+        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full bg-transparent text-sm focus:outline-none"
+          inputMode="url"
+        />
+      </div>
+      {!valid && <p className="mt-1 text-[11px] font-medium text-destructive">Enter a valid URL starting with http:// or https://</p>}
+    </div>
+  );
+}
+
 function AtsCard({ score, completion }: { score: number; completion: number }) {
   const color = score >= 75 ? "text-neon" : score >= 45 ? "text-amber-500" : "text-destructive";
   return (
