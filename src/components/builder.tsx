@@ -426,13 +426,46 @@ export function Builder() {
                             update("projects", ps);
                           }}
                           rows={3}
-                          placeholder="What did you build? What technologies? What was the impact?"
+                          placeholder="What did you build? What was the impact?"
                           className="mt-2 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-neon focus:outline-none"
                         />
+                        <input
+                          value={p.tech ?? ""}
+                          onChange={(e) => {
+                            const ps = [...data.projects]; ps[i] = { ...ps[i], tech: e.target.value };
+                            update("projects", ps);
+                          }}
+                          placeholder="Tech stack — e.g. React, Node.js, PostgreSQL"
+                          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-neon focus:outline-none"
+                        />
+                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                          <UrlField
+                            icon={Github}
+                            label="GitHub"
+                            value={p.github ?? ""}
+                            onChange={(v) => {
+                              const ps = [...data.projects]; ps[i] = { ...ps[i], github: v };
+                              update("projects", ps);
+                            }}
+                            placeholder="https://github.com/you/project"
+                            compact
+                          />
+                          <UrlField
+                            icon={ExternalLink}
+                            label="Live Demo"
+                            value={p.demo ?? ""}
+                            onChange={(v) => {
+                              const ps = [...data.projects]; ps[i] = { ...ps[i], demo: v };
+                              update("projects", ps);
+                            }}
+                            placeholder="https://project.vercel.app"
+                            compact
+                          />
+                        </div>
                         <button
                           onClick={() => improveProject(i)}
                           disabled={improvingIdx === i || !p.description}
-                          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-neon px-3 py-1.5 text-xs font-semibold text-neon-foreground hover:opacity-90 disabled:opacity-50"
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-neon px-3 py-1.5 text-xs font-semibold text-neon-foreground hover:opacity-90 disabled:opacity-50"
                         >
                           {improvingIdx === i ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                           Improve with AI
@@ -440,7 +473,7 @@ export function Builder() {
                       </div>
                     ))}
                     <button
-                      onClick={() => update("projects", [...data.projects, { title: "", description: "" }])}
+                      onClick={() => update("projects", [...data.projects, { title: "", description: "", tech: "", github: "", demo: "" }])}
                       className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-4 text-sm font-medium text-muted-foreground hover:border-neon hover:text-neon transition-colors"
                     >
                       <Plus className="h-4 w-4" /> Add Project
