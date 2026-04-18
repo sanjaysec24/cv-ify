@@ -207,7 +207,6 @@ export async function extractTextFromFile(file: File): Promise<string> {
 
 async function extractPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
-  // @ts-expect-error vite worker import
   const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -217,15 +216,16 @@ async function extractPdf(file: File): Promise<string> {
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    const strings = content.items.map((it: { str?: string }) => it.str ?? "");
+    const strings = content.items.map((it) => ("str" in it ? it.str : ""));
     text += strings.join(" ") + "\n";
   }
   return text;
 }
 
 async function extractDocx(file: File): Promise<string> {
-  const mammoth = await import("mammoth/mammoth.browser");
+  // @ts-expect-error - mammoth browser bundle ships without types
+  const mammoth = await import("mammoth/mammoth.browser.js");
   const buf = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer: buf });
-  return result.value;
+  return result.value as string;
 }
