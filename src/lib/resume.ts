@@ -8,6 +8,14 @@ export type TemplateId =
   | "minimal"
   | "compact";
 
+export type ProjectItem = {
+  title: string;
+  description: string;
+  tech?: string;
+  github?: string;
+  demo?: string;
+};
+
 export type ResumeData = {
   name: string;
   email: string;
@@ -15,8 +23,12 @@ export type ResumeData = {
   location: string;
   role: string;
   summary: string;
+  /** social / professional links */
+  linkedin?: string;
+  github?: string;
+  website?: string;
   skills: string[];
-  projects: { title: string; description: string }[];
+  projects: ProjectItem[];
   experience: { company: string; role: string; duration: string; description: string }[];
   education: { school: string; degree: string; year: string }[];
   template: TemplateId;
