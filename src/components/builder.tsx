@@ -233,6 +233,27 @@ export function Builder() {
         <button onClick={loadDemo} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <Wand2 className="h-3.5 w-3.5" /> Try Demo Resume
         </button>
+        {user && (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${
+              cloudStatus === "saving"
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                : cloudStatus === "saved"
+                ? "border-neon/30 bg-neon/10 text-neon"
+                : cloudStatus === "error"
+                ? "border-destructive/30 bg-destructive/10 text-destructive"
+                : "border-border bg-muted text-muted-foreground"
+            }`}
+            title="Auto-saving to your Google account"
+          >
+            {cloudStatus === "saving" && <Loader2 className="h-3 w-3 animate-spin" />}
+            {cloudStatus === "saved" && <Check className="h-3 w-3" />}
+            {cloudStatus === "error" && <AlertTriangle className="h-3 w-3" />}
+            {cloudStatus === "saving" ? "Saving…" : cloudStatus === "saved" ? "Saved to cloud" : cloudStatus === "error" ? "Save failed" : "Cloud sync"}
+          </span>
+        )}
+        <button className="hidden">_</button>
+        </button>
         <button onClick={resetAll} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-colors">
           <X className="h-3.5 w-3.5" /> Reset
         </button>
