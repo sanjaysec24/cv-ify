@@ -12,14 +12,14 @@ import {
   User, Wrench, FolderGit2, Briefcase, GraduationCap,
   Sparkles, Plus, X, Download, Check, AlertTriangle, Loader2, ArrowRight, ArrowLeft,
   GripVertical, Wand2, LayoutTemplate, Image as ImageIcon, Palette,
-  ZoomIn, ZoomOut, Eye,
+  ZoomIn, ZoomOut, Eye, Linkedin, Github, Globe, ExternalLink,
 } from "lucide-react";
 import { ResumePreview } from "./resume-preview";
 import {
   type ResumeData, type SectionId, type TemplateId,
   ROLES, ROLE_SKILLS, SECTION_LABELS, COLOR_PRESETS,
   DEFAULT_SECTION_ORDER, DEMO_DATA, STORAGE_KEY,
-  calculateAtsScore, completionPercent, improveBullet,
+  calculateAtsScore, completionPercent, improveBullet, isValidUrl,
 } from "@/lib/resume";
 import { exportResumePdf } from "@/lib/pdf-export";
 
