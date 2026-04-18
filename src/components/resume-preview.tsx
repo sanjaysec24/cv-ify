@@ -250,9 +250,12 @@ function SidebarTemplate({ data }: Props) {
         </h1>
         {data.role && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.85)" }}>{data.role}</p>}
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, fontSize: 11.5, color: "rgba(255,255,255,0.92)" }}>
-          {data.email && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></div>}
+          {data.email && <a href={`mailto:${data.email}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none" }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></a>}
           {data.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</div>}
           {data.location && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</div>}
+          {data.linkedin && <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Linkedin style={{ width: 12, height: 12 }} />{shortUrl(data.linkedin)}</a>}
+          {data.github && <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Github style={{ width: 12, height: 12 }} />{shortUrl(data.github)}</a>}
+          {data.website && <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Globe style={{ width: 12, height: 12 }} />{shortUrl(data.website)}</a>}
         </div>
         {data.skills.length > 0 && (
           <div style={{ marginTop: 22 }}>
