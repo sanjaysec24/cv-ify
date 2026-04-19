@@ -199,31 +199,68 @@ export function analyzeResumeText(rawText: string): AnalyzedResume {
 
 export async function extractTextFromFile(file: File): Promise<string> {
   const name = file.name.toLowerCase();
-  if (name.endsWith(".pdf")) return extractPdf(file);
+  if (name.endsWith(".pdf")) {
+    const native = await extractPdf(file);
+    // Quality check — if native extraction is sparse, the PDF is likely scanned.
+    const letters = (native.match(/[a-zA-Z]/g) ?? []).length;
+    if (native.trim().length >= 200 && letters >= 80) return native;
+    // Fallback to AI OCR via server function
+    try {
+      const ocrText = await ocrPdfViaAI(file);
+      if (ocrText.trim().length > native.trim().length) return ocrText;
+    } catch (e) {
+      console.warn("AI OCR fallback failed:", e);
+      if (native.trim().length > 0) return native;
+      throw e;
+    }
+    return native;
+  }
   if (name.endsWith(".docx")) return extractDocx(file);
   if (name.endsWith(".txt")) return file.text();
   throw new Error("Unsupported file. Please upload a PDF, DOCX, or TXT file.");
 }
 
 async function extractPdf(file: File): Promise<string> {
-  const pdfjs = await import("pdfjs-dist");
-  // Vite-friendly worker resolution
-  const workerUrl = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url,
-  ).toString();
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  try {
+    const pdfjs = await import("pdfjs-dist");
+    const workerUrl = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
-  const buf = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: buf }).promise;
-  let text = "";
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    const strings = content.items.map((it) => ("str" in it ? it.str : ""));
-    text += strings.join(" ") + "\n";
+    const buf = await file.arrayBuffer();
+    const doc = await pdfjs.getDocument({ data: buf }).promise;
+    let text = "";
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      const strings = content.items.map((it) => ("str" in it ? it.str : ""));
+      text += strings.join(" ") + "\n";
+    }
+    return text;
+  } catch (e) {
+    console.warn("Native PDF parse failed:", e);
+    return "";
   }
-  return text;
+}
+
+async function ocrPdfViaAI(file: File): Promise<string> {
+  const { ocrDocument } = await import("@/server/ocr");
+  const buf = await file.arrayBuffer();
+  const base64 = arrayBufferToBase64(buf);
+  const result = await ocrDocument({ data: { base64, mimeType: file.type || "application/pdf" } });
+  return result.text ?? "";
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
+  }
+  return btoa(binary);
 }
 
 async function extractDocx(file: File): Promise<string> {
