@@ -52,7 +52,17 @@ function LoginPage() {
           <span className="font-display text-xl font-bold">CVify<span className="text-neon">.AI</span></span>
         </div>
 
-        <h1 className="mt-6 font-display text-3xl font-bold tracking-tight">Welcome back</h1>
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 py-1 pl-1 pr-3 shadow-sm">
+          <div className="flex -space-x-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neon text-[10px] font-bold text-neon-foreground ring-2 ring-card">Y</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background ring-2 ring-card">A</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground ring-2 ring-card">S</span>
+          </div>
+          <span className="text-xs font-semibold">1500+ Users</span>
+          <span className="text-xs text-muted-foreground">Joined recently</span>
+        </div>
+
+        <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">Welcome back</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Sign in to save your resumes to the cloud and access them anywhere.
         </p>
