@@ -250,56 +250,56 @@ function SidebarTemplate({ data }: Props) {
   const c = data.primaryColor;
   return (
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
-      <aside style={{ width: 250, minWidth: 250, maxWidth: 250, flexShrink: 0, background: c, color: "#ffffff", padding: "32px 22px", boxSizing: "border-box", overflow: "hidden" }}>
+      <aside style={{ width: 270, minWidth: 270, maxWidth: 270, flexShrink: 0, background: c, color: "#ffffff", padding: "36px 24px", boxSizing: "border-box", overflow: "hidden" }}>
         {data.photo && (
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <Photo src={data.photo} size={96} ring="#ffffff" />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+            <Photo src={data.photo} size={108} ring="#ffffff" />
           </div>
         )}
-        <h1 style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.15, margin: 0, color: "#ffffff" }}>
+        <h1 style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.15, margin: 0, color: "#ffffff", letterSpacing: "-0.01em" }}>
           {data.name || "Your Name"}
         </h1>
-        {data.role && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.85)" }}>{data.role}</p>}
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, fontSize: 11.5, color: "rgba(255,255,255,0.92)" }}>
-          {data.email && <a href={`mailto:${data.email}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none" }}><Mail style={{ width: 12, height: 12 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></a>}
-          {data.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone style={{ width: 12, height: 12 }} />{data.phone}</div>}
-          {data.location && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin style={{ width: 12, height: 12 }} />{data.location}</div>}
-          {data.linkedin && <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Linkedin style={{ width: 12, height: 12 }} />{shortUrl(data.linkedin)}</a>}
-          {data.github && <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Github style={{ width: 12, height: 12 }} />{shortUrl(data.github)}</a>}
-          {data.website && <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Globe style={{ width: 12, height: 12 }} />{shortUrl(data.website)}</a>}
+        {data.role && <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{data.role}</p>}
+        <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5, color: "rgba(255,255,255,0.95)" }}>
+          {data.email && <a href={`mailto:${data.email}`} style={{ display: "flex", alignItems: "center", gap: 7, color: "inherit", textDecoration: "none" }}><Mail style={{ width: 13, height: 13, flexShrink: 0 }} /><span style={{ wordBreak: "break-all" }}>{data.email}</span></a>}
+          {data.phone && <div style={{ display: "flex", alignItems: "center", gap: 7 }}><Phone style={{ width: 13, height: 13, flexShrink: 0 }} />{data.phone}</div>}
+          {data.location && <div style={{ display: "flex", alignItems: "center", gap: 7 }}><MapPin style={{ width: 13, height: 13, flexShrink: 0 }} />{data.location}</div>}
+          {data.linkedin && <a href={ensureProtocol(data.linkedin)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 7, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Linkedin style={{ width: 13, height: 13, flexShrink: 0 }} />{shortUrl(data.linkedin)}</a>}
+          {data.github && <a href={ensureProtocol(data.github)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 7, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Github style={{ width: 13, height: 13, flexShrink: 0 }} />{shortUrl(data.github)}</a>}
+          {data.website && <a href={ensureProtocol(data.website)} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 7, color: "inherit", textDecoration: "none", wordBreak: "break-all" }}><Globe style={{ width: 13, height: 13, flexShrink: 0 }} />{shortUrl(data.website)}</a>}
         </div>
         {data.skills.length > 0 && (
-          <div style={{ marginTop: 22 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", color: "#ffffff" }}>Skills</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          <div style={{ marginTop: 26 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 10px", color: "#ffffff" }}>Skills</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {data.skills.map((s) => (
-                <span key={s} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.15)", color: "#ffffff" }}>{s}</span>
+                <span key={s} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 5, background: "rgba(255,255,255,0.18)", color: "#ffffff", fontWeight: 500 }}>{s}</span>
               ))}
             </div>
           </div>
         )}
         {data.education.length > 0 && (
-          <div style={{ marginTop: 22 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", color: "#ffffff" }}>Education</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ marginTop: 26 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 10px", color: "#ffffff" }}>Education</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {data.education.map((e, i) => (
                 <div key={i}>
-                  <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0, color: "#ffffff" }}>{e.school}</p>
-                  {e.degree && <p style={{ fontSize: 11, margin: "2px 0 0", color: "rgba(255,255,255,0.85)" }}>{e.degree}</p>}
-                  {e.year && <p style={{ fontSize: 10.5, margin: "1px 0 0", color: "rgba(255,255,255,0.7)" }}>{e.year}</p>}
+                  <p style={{ fontSize: 13.5, fontWeight: 600, margin: 0, color: "#ffffff", lineHeight: 1.3 }}>{e.school}</p>
+                  {e.degree && <p style={{ fontSize: 12, margin: "3px 0 0", color: "rgba(255,255,255,0.9)" }}>{e.degree}</p>}
+                  {e.year && <p style={{ fontSize: 11.5, margin: "2px 0 0", color: "rgba(255,255,255,0.75)" }}>{e.year}</p>}
                 </div>
               ))}
             </div>
           </div>
         )}
       </aside>
-      <main style={{ width: 544, minWidth: 544, maxWidth: 544, flexShrink: 0, padding: "32px 28px", color: "#111827", boxSizing: "border-box", overflow: "hidden" }}>
+      <main style={{ width: 524, minWidth: 524, maxWidth: 524, flexShrink: 0, padding: "36px 32px", color: "#111827", boxSizing: "border-box", overflow: "hidden" }}>
         {mainIds.map((id) => {
           const body = renderBody(id, data);
           if (!body) return null;
           return (
-            <section key={id} style={{ marginBottom: 16 }}>
-              <SectionTitle id={id} color={c} showIcons={data.showIcons} />
+            <section key={id} style={{ marginBottom: 18 }}>
+              <SectionTitle id={id} color={c} showIcons={data.showIcons} size={14} />
               {body}
             </section>
           );
