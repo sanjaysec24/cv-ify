@@ -366,10 +366,10 @@ export function Builder() {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Full Name" value={data.name} onChange={(v) => update("name", v)} placeholder="Jane Doe" />
-                    <Field label="Email" value={data.email} onChange={(v) => update("email", v)} placeholder="jane@email.com" />
-                    <Field label="Phone" value={data.phone} onChange={(v) => update("phone", v)} placeholder="+1 555 010 0000" />
-                    <Field label="Location" value={data.location} onChange={(v) => update("location", v)} placeholder="San Francisco, CA" />
+                    <Field label="Full Name" value={data.name} onChange={(v) => update("name", v)} placeholder="Adithya Sivakumar" />
+                    <Field label="Email" value={data.email} onChange={(v) => update("email", v)} placeholder="adithya@email.com" />
+                    <Field label="Phone" value={data.phone} onChange={(v) => update("phone", v)} placeholder="+91 98765 43210" />
+                    <Field label="Location" value={data.location} onChange={(v) => update("location", v)} placeholder="Chennai, India" />
                   </div>
                   <div className="mt-4">
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Role</label>
