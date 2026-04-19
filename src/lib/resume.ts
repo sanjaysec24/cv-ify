@@ -136,14 +136,14 @@ export function completionPercent(data: ResumeData): number {
 }
 
 export const DEMO_DATA: ResumeData = {
-  name: "Aanya Sharma",
-  email: "aanya.sharma@email.com",
+  name: "Adithya Sivakumar",
+  email: "adithya.sivakumar@email.com",
   phone: "+91 98765 43210",
-  location: "Bengaluru, India",
+  location: "Kanchipuram, India",
   role: "Frontend Developer",
-  linkedin: "https://linkedin.com/in/aanyasharma",
-  github: "https://github.com/aanyasharma",
-  website: "https://aanya.dev",
+  linkedin: "https://linkedin.com/in/adithyasivakumar",
+  github: "https://github.com/adithyasivakumar",
+  website: "https://adithya.dev",
   summary: "Final-year CS student passionate about building delightful, accessible web experiences. Strong fundamentals in React, TypeScript and modern UI engineering.",
   skills: ["React", "TypeScript", "Tailwind CSS", "Next.js", "Vite", "Figma", "Jest", "GraphQL"],
   projects: [
@@ -151,14 +151,14 @@ export const DEMO_DATA: ResumeData = {
       title: "Pulse — Realtime Dashboard",
       description: "Engineered a real-time analytics dashboard with React and WebSockets, reducing perceived load time by 40% and supporting 10k concurrent users.",
       tech: "React, TypeScript, WebSockets, Node.js",
-      github: "https://github.com/aanyasharma/pulse",
+      github: "https://github.com/adithyasivakumar/pulse",
       demo: "https://pulse-demo.vercel.app",
     },
     {
       title: "StudyHive — Collab Notes",
       description: "Designed a collaborative notes platform with offline sync and rich-text editing, growing to 2,000 weekly active student users.",
       tech: "Next.js, Supabase, TipTap",
-      github: "https://github.com/aanyasharma/studyhive",
+      github: "https://github.com/adithyasivakumar/studyhive",
       demo: "https://studyhive.app",
     },
   ],
