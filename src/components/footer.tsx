@@ -12,7 +12,7 @@ export function Footer() {
             <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
           <span>
-            Built by <span className="font-semibold text-foreground">Zyphra</span>
+            Built by <span className="font-semibold text-foreground">Zyphra community</span>
           </span>
         </div>
 
